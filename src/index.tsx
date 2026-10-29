@@ -7,6 +7,7 @@ import { createRoot } from "@opentui/react"
 import { useEffect, useMemo, useState } from "react"
 import { dirname, join } from "node:path"
 import { HistoryStore, entryFromJob, historyPath } from "./core/history"
+import { tr } from "./core/i18n"
 import { nextIntro } from "./core/intro"
 import { killAllChildren } from "./core/process"
 import { DownloadQueue } from "./core/queue"
@@ -66,7 +67,6 @@ async function shutdown(code = 0): Promise<never> {
     } catch {
       // Restoration is best effort.
     }
-    process.stdout.write("\x1b[38;5;244m пака((((\x1b[0m\n")
   }
   process.exit(code)
 }
@@ -87,7 +87,7 @@ function Root() {
       setDetected(found)
     })
     if (settings.loadError) show(settings.loadError, "error")
-    else if (settings.migrated) show("настройки перенесены из Python-версии fluxware", "ok")
+    else if (settings.migrated) show(tr("настройки перенесены из Python-версии fluxware", "settings carried over from the Python version of fluxware"), "ok")
   }, [show])
 
   const services = useMemo<AppServices>(

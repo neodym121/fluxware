@@ -2,9 +2,10 @@ import type { BoxRenderable } from "@opentui/core"
 import { useActiveKeys, useBindings } from "@opentui/keymap/react"
 import { useBlur, useFocus, useRenderer, useTerminalDimensions } from "@opentui/react"
 import { useEffect, useRef, useState, type RefObject } from "react"
-import { formatSpeed, plural, truncate } from "../core/format"
-import { useJobs, useServices, useSpinner, type Toast } from "./context"
-import { AboutScreen, YTDLP_INSTALL_HINT, ffmpegInstallHint } from "./screens/AboutScreen"
+import { formatSpeed, truncate } from "../core/format"
+import { count, tr } from "../core/i18n"
+import { useJobs, useServices, useSettings, useSpinner, type Toast } from "./context"
+import { AboutScreen, ffmpegInstallHint, ytdlpInstallHint } from "./screens/AboutScreen"
 import { BatchScreen } from "./screens/BatchScreen"
 import { DownloadScreen } from "./screens/DownloadScreen"
 import { HistoryScreen } from "./screens/HistoryScreen"
@@ -12,15 +13,24 @@ import { SettingsScreen } from "./screens/SettingsScreen"
 import type { FocusEntry, ScreenProps } from "./screens/shared"
 import { theme } from "./theme"
 
-export const SECTIONS = [
-  { id: "download", label: "скачка" },
-  { id: "batch", label: "пакет" },
-  { id: "history", label: "история" },
-  { id: "settings", label: "настройки" },
-  { id: "about", label: "о программе" },
-] as const
+export const SECTION_IDS = ["download", "batch", "history", "settings", "about"] as const
 
-export type SectionId = (typeof SECTIONS)[number]["id"]
+export type SectionId = (typeof SECTION_IDS)[number]
+
+function sectionLabel(id: SectionId): string {
+  switch (id) {
+    case "download":
+      return tr("скачка", "download")
+    case "batch":
+      return tr("пакет", "batch")
+    case "history":
+      return tr("история", "history")
+    case "settings":
+      return tr("настройки", "settings")
+    case "about":
+      return tr("о программе", "about")
+  }
+}
 
 function Screen(props: ScreenProps & { section: SectionId }) {
   const { section, ...rest } = props
@@ -87,8 +97,8 @@ function QueueStatus() {
     if (s.done === 0 && s.failed === 0) return null
     return (
       <text fg={theme.faint} wrapMode="none" flexShrink={0}>
-        {`готово ${s.done}`}
-        {s.failed ? <span fg={theme.error}>{` · ошибок ${s.failed}`}</span> : null}
+        {`${tr("готово", "done")} ${s.done}`}
+        {s.failed ? <span fg={theme.error}>{` · ${tr("ошибок", "errors")} ${s.failed}`}</span> : null}
       </text>
     )
   }
@@ -97,8 +107,8 @@ function QueueStatus() {
   return (
     <text wrapMode="none" flexShrink={0}>
       <span fg={theme.accent}>{frame + " "}</span>
-      <span fg={theme.text}>{`${s.running} ${plural(s.running, "загрузка", "загрузки", "загрузок")}`}</span>
-      <span fg={theme.muted}>{(s.queued ? ` · ждут ${s.queued}` : "") + speed + pct}</span>
+      <span fg={theme.text}>{`${s.running} ${count(s.running, ["загрузка", "загрузки", "загрузок"], ["download", "downloads"])}`}</span>
+      <span fg={theme.muted}>{(s.queued ? ` · ${tr("ждут", "waiting")} ${s.queued}` : "") + speed + pct}</span>
     </text>
   )
 }
@@ -115,8 +125,8 @@ function ToastLine(props: { toast: Toast; width: number }) {
 
 function ToolVersions() {
   const { tools } = useServices()
-  if (tools === null) return <span fg={theme.faint}>проверяю yt-dlp…</span>
-  return tools.ytdlp ? <span fg={theme.faint}>{`yt-dlp ${tools.ytdlp.version}`}</span> : <span fg={theme.error}>yt-dlp не найден</span>
+  if (tools === null) return <span fg={theme.faint}>{tr("проверяю yt-dlp…", "checking yt-dlp…")}</span>
+  return tools.ytdlp ? <span fg={theme.faint}>{`yt-dlp ${tools.ytdlp.version}`}</span> : <span fg={theme.error}>{tr("yt-dlp не найден", "yt-dlp not found")}</span>
 }
 
 /**
@@ -163,17 +173,18 @@ function BottomBar(props: { compact: boolean; toast: Toast | null; width: number
 
 /** A centered message over everything, closed with enter or esc. */
 function Notice(props: { title: string; lines: string[]; onClose: () => void; width: number; height: number }) {
+  const { language } = useSettings()
   const close = useRef(props.onClose)
   close.current = props.onClose
   useBindings(
     () => ({
       priority: 100,
       bindings: [
-        { key: "return", desc: "понятно", cmd: () => close.current() },
+        { key: "return", desc: tr("понятно", "got it"), cmd: () => close.current() },
         { key: "escape", cmd: () => close.current() },
       ],
     }),
-    [],
+    [language],
   )
   const width = Math.min(72, props.width - 4)
   return (
@@ -198,7 +209,7 @@ function Notice(props: { title: string; lines: string[]; onClose: () => void; wi
         </text>
       ))}
       <text fg={theme.faint} marginTop={1}>
-        enter — понятно
+        {tr("enter — понятно", "enter — got it")}
       </text>
     </box>
   )
@@ -222,24 +233,25 @@ function TabBar(props: { section: SectionId; focused: boolean; onPick: (id: Sect
       focusedBorderColor={theme.accent}
       flexDirection="row"
     >
-      {SECTIONS.map((s) => {
-        const selected = s.id === props.section
-        const badge = s.id === "history" && active ? ` ${spinner}${active}` : ""
+      {SECTION_IDS.map((id) => {
+        const label = sectionLabel(id)
+        const selected = id === props.section
+        const badge = id === "history" && active ? ` ${spinner}${active}` : ""
         const bg = selected ? (props.focused ? theme.accent : theme.selection) : undefined
         const fg = selected ? (props.focused ? "#000000" : theme.accent) : theme.muted
         return (
           <box
-            key={s.id}
+            key={id}
             height={1}
             flexGrow={1}
             flexBasis={0}
             justifyContent="center"
             flexDirection="row"
             backgroundColor={bg}
-            onMouseDown={() => props.onPick(s.id)}
+            onMouseDown={() => props.onPick(id)}
           >
             <text fg={fg} wrapMode="none">
-              {selected ? <b>{s.label + badge}</b> : s.label + badge}
+              {selected ? <b>{label + badge}</b> : label + badge}
             </text>
           </box>
         )
@@ -250,6 +262,8 @@ function TabBar(props: { section: SectionId; focused: boolean; onPick: (id: Sect
 
 export function App(props: { toast: Toast | null; initialSection?: SectionId }) {
   const services = useServices()
+  // The tab labels and key hints are built from the language, so a change re-renders them.
+  const { language } = useSettings()
   const renderer = useRenderer()
   const { width, height } = useTerminalDimensions()
   const [section, setSection] = useState<SectionId>(props.initialSection ?? "download")
@@ -269,7 +283,10 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
     const active = services.queue.activeCount
     if (active > 0 && Date.now() - quitArmedAt.current > 3000) {
       quitArmedAt.current = Date.now()
-      services.toast(`идут загрузки (${active}): нажми ещё раз, чтобы прервать их и выйти`, "warn")
+      services.toast(
+        tr(`идут загрузки (${active}): нажми ещё раз, чтобы прервать их и выйти`, `downloads in progress (${active}): press again to cancel them and quit`),
+        "warn",
+      )
       return
     }
     services.quit()
@@ -278,9 +295,9 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
   quitRef.current = requestQuit
 
   function moveSection(delta: number) {
-    const i = SECTIONS.findIndex((s) => s.id === latest.current.section)
-    const next = SECTIONS[(i + delta + SECTIONS.length) % SECTIONS.length]
-    if (next) setSection(next.id)
+    const i = SECTION_IDS.indexOf(latest.current.section)
+    const next = SECTION_IDS[(i + delta + SECTION_IDS.length) % SECTION_IDS.length]
+    if (next) setSection(next)
   }
 
   function enterContent(edge: FocusEntry["edge"]) {
@@ -288,7 +305,7 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
     setArea("content")
   }
 
-  useBindings(() => ({ bindings: [{ key: "ctrl+c", desc: "выход", cmd: () => quitRef.current() }] }), [])
+  useBindings(() => ({ bindings: [{ key: "ctrl+c", desc: tr("выход", "quit"), cmd: () => quitRef.current() }] }), [language])
 
   useBindings(
     () => ({
@@ -296,25 +313,25 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
       targetMode: "focus",
       priority: 10,
       bindings: [
-        { key: "left", desc: "раздел", cmd: () => moveSection(-1) },
-        { key: "right", desc: "раздел", cmd: () => moveSection(1) },
+        { key: "left", desc: tr("раздел", "section"), cmd: () => moveSection(-1) },
+        { key: "right", desc: tr("раздел", "section"), cmd: () => moveSection(1) },
         { key: "h", cmd: () => moveSection(-1) },
         { key: "l", cmd: () => moveSection(1) },
-        { key: "return", desc: "открыть", cmd: () => enterContent("first") },
+        { key: "return", desc: tr("открыть", "open"), cmd: () => enterContent("first") },
         { key: "down", cmd: () => enterContent("first") },
-        { key: "tab", desc: "окно", cmd: () => enterContent("first") },
+        { key: "tab", desc: tr("окно", "pane"), cmd: () => enterContent("first") },
         { key: "shift+tab", cmd: () => enterContent("last") },
-        ...SECTIONS.map((s, i) => ({
+        ...SECTION_IDS.map((id, i) => ({
           key: String(i + 1),
           cmd: () => {
-            setSection(s.id)
+            setSection(id)
             enterContent("first")
           },
         })),
-        { key: "q, й", desc: "выход", cmd: () => quitRef.current() },
+        { key: "q, й", desc: tr("выход", "quit"), cmd: () => quitRef.current() },
       ],
     }),
-    [],
+    [language],
   )
 
   // Screens handle Tab inside themselves first and fall through here at their edges.
@@ -322,12 +339,12 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
     () => ({
       targetRef: contentRef,
       bindings: [
-        { key: "escape", desc: "к разделам", cmd: () => setArea("nav") },
-        { key: "tab", desc: "окно", cmd: () => setArea("nav") },
+        { key: "escape", desc: tr("к разделам", "to sections"), cmd: () => setArea("nav") },
+        { key: "tab", desc: tr("окно", "pane"), cmd: () => setArea("nav") },
         { key: "shift+tab", cmd: () => setArea("nav") },
       ],
     }),
-    [],
+    [language],
   )
 
   // Startup notice about missing tools, once detection finishes.
@@ -336,13 +353,19 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
     if (!tools || noticeShown.current) return
     noticeShown.current = true
     const lines: string[] = []
-    if (!tools.ytdlp) lines.push("yt-dlp не найден: без него fluxware ничего не скачает.", `установка: ${YTDLP_INSTALL_HINT}`)
+    if (!tools.ytdlp) lines.push(
+        tr("yt-dlp не найден: без него fluxware ничего не скачает.", "yt-dlp not found: fluxware cannot download anything without it."),
+        `${tr("установка", "install")}: ${ytdlpInstallHint()}`,
+      )
     if (!tools.ffmpeg)
       lines.push(
-        "ffmpeg не найден в PATH: не будут работать склейка видео и звука, извлечение аудио и обложки.",
-        `установка: ${ffmpegInstallHint()}`,
+        tr(
+          "ffmpeg не найден в PATH: не будут работать склейка видео и звука, извлечение аудио и обложки.",
+          "ffmpeg not found in PATH: merging video and audio, audio extraction and covers will not work.",
+        ),
+        `${tr("установка", "install")}: ${ffmpegInstallHint()}`,
       )
-    if (lines.length) setNotice({ title: tools.ytdlp ? "не хватает ffmpeg" : "не хватает yt-dlp", lines })
+    if (lines.length) setNotice({ title: tools.ytdlp ? tr("не хватает ffmpeg", "ffmpeg is missing") : tr("не хватает yt-dlp", "yt-dlp is missing"), lines })
   }, [services.tools])
 
   useFocus(() => (terminalFocused.current = true))
@@ -359,7 +382,7 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
       lastPct = pct
       try {
         renderer.setTerminalTitle(pct >= 0 ? `fluxware · ${pct}%` : "fluxware")
-        if (pct >= 0) renderer.setProgramStatus({ state: "working", app: "fluxware", progress: pct, message: `${s.running + s.queued} в работе` })
+        if (pct >= 0) renderer.setProgramStatus({ state: "working", app: "fluxware", progress: pct, message: `${s.running + s.queued} ${tr("в работе", "in progress")}` })
       } catch {
         // The terminal may be gone during shutdown.
       }
@@ -367,7 +390,9 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
     const offJobs = queue.subscribe(update)
     const offIdle = queue.onIdle((stats) => {
       const message =
-        `готово ${stats.done}` + (stats.failed ? `, ошибок ${stats.failed}` : "") + (stats.canceled ? `, отменено ${stats.canceled}` : "")
+        `${tr("готово", "done")} ${stats.done}` +
+        (stats.failed ? `, ${tr("ошибок", "errors")} ${stats.failed}` : "") +
+        (stats.canceled ? `, ${tr("отменено", "canceled")} ${stats.canceled}` : "")
       try {
         renderer.setProgramStatus({ state: stats.failed && !stats.done ? "error" : "done", app: "fluxware", message })
         if (!terminalFocused.current || stats.done + stats.failed > 1) renderer.triggerNotification(message, "fluxware")
@@ -411,11 +436,11 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
         onMouseDown={focusContent}
       >
         {/* Every screen stays mounted, so a half-typed link survives a trip to another section. */}
-        {SECTIONS.map((s) => (
-          <box key={s.id} visible={s.id === section} flexGrow={1} flexDirection="column">
+        {SECTION_IDS.map((id) => (
+          <box key={id} visible={id === section} flexGrow={1} flexDirection="column">
             <Screen
-              section={s.id}
-              focused={contentFocused && s.id === section}
+              section={id}
+              focused={contentFocused && id === section}
               width={contentWidth}
               height={contentHeight}
               onFocusRequest={focusContent}

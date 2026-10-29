@@ -18,27 +18,44 @@ fluxware is a keyboard-first interface over [yt-dlp](https://github.com/yt-dlp/y
 
 **Queue.** Downloads run in the background, one or up to four at a time, so you can paste the next link while the previous one is still downloading. A canceled download removes its partial files.
 
-**Settings.** Video container (MP4, WEBM, MKV), audio format (OPUS, MP3, M4A), separate folders for video and audio, the number of downloads at a time, cover previews, the history log, and your own yt-dlp options, which yt-dlp checks before they are saved.
+**Settings.** Video container (MP4, WEBM, MKV), audio format (OPUS, MP3, M4A), separate folders for video and audio, the number of downloads at a time, cover previews, the history log, the interface language (English or Russian), and your own yt-dlp options, which yt-dlp checks before they are saved.
 
 When YouTube returns only its low-quality fallback format, or a video comes out below the best available quality, fluxware says so and shows the yt-dlp warnings that explain why.
 
+## Install
+
+fluxware ships as a single executable, `fx.exe`, with nothing else to unpack.
+
+1. Download `fx.exe` from the [latest release](../../releases/latest).
+2. Put it in a folder of your own, for example `C:\Tools\fx`.
+3. Add that folder to `Path`: open the Start menu, search for "Edit environment variables for your account", select `Path`, click **Edit**, then **New**, and enter the folder, for example `C:\Tools\fx`. Or run this in PowerShell, with your own folder:
+
+   ```powershell
+   [Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";C:\Tools\fx", "User")
+   ```
+
+4. Open a new terminal and run `fx`.
+
+You also need the tools below. The interface language follows your system and can be switched in the settings.
+
 ## Requirements
 
-- [Bun](https://bun.sh) 1.3.14 or newer
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp): `pip install -U "yt-dlp[default]"` or `winget install yt-dlp`
 - [ffmpeg](https://ffmpeg.org): `winget install ffmpeg`, needed to merge video and audio, extract audio and embed covers
 - [Deno](https://deno.com) or [Node.js](https://nodejs.org), recommended: yt-dlp uses them to solve YouTube's JavaScript challenges, without which YouTube sometimes offers only 360p
 
 fluxware finds yt-dlp on `PATH` or as the Python module `yt_dlp`, and warns at startup when yt-dlp or ffmpeg is missing.
 
-## Run
+## Run from source
+
+This needs [Bun](https://bun.sh) 1.3.14 or newer.
 
 ```bash
 bun install
 bun start
 ```
 
-To build a single executable, run `bun run build`; it lands in `dist/`. Tests run with `bun test`.
+`bun run build` compiles everything into one executable, `dist/fx.exe`. Tests run with `bun test`.
 
 ## Keys
 

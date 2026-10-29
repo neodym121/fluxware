@@ -1,4 +1,5 @@
 import { stripAnsi } from "./format"
+import { tr } from "./i18n"
 import { isUrl } from "./urls"
 
 /** The subset of a yt-dlp info dict that fluxware reads. */
@@ -132,7 +133,7 @@ export function toMediaInfo(url: string, raw: YtInfo, warnings: readonly string[
   const isPlaylist = raw._type === "playlist" || raw._type === "multi_video"
   return {
     url,
-    title: raw.title || raw.fulltitle || "Без названия",
+    title: raw.title || raw.fulltitle || tr("Без названия", "Untitled"),
     uploader: raw.uploader || raw.artist || raw.channel || "Unknown",
     duration: raw.duration ?? 0,
     thumbnail: previewThumbnail(raw),
@@ -168,12 +169,27 @@ export function describeQualityDrop(
 
   const lines: string[] = []
   if (isYoutubeInfo(info) && formats.length > 0 && !hasSeparateVideoStreams(formats)) {
-    lines.push(`YouTube отдал только запасной формат (${got ?? "?"}p со встроенным звуком): нормальных качеств в ответе не было`)
+    lines.push(
+      tr(
+        `YouTube отдал только запасной формат (${got ?? "?"}p со встроенным звуком): нормальных качеств в ответе не было`,
+        `YouTube returned only a fallback format (${got ?? "?"}p with built-in audio): no regular qualities in the response`,
+      ),
+    )
     for (const w of relevantWarnings(ytdlpWarnings)) lines.push(`yt-dlp: ${w}`)
-    lines.push('обычно это временно: попробуй позже или обнови yt-dlp (pip install -U "yt-dlp[default]")')
+    lines.push(
+      tr(
+        'обычно это временно: попробуй позже или обнови yt-dlp (pip install -U "yt-dlp[default]")',
+        'this is usually temporary: try later or update yt-dlp (pip install -U "yt-dlp[default]")',
+      ),
+    )
   } else if (got && expected && got < expected) {
-    lines.push(`скачано в ${got}p, хотя доступно ${expected}p`)
-    lines.push(`в формате ${videoFormat.toUpperCase()} лучше не нашлось: попробуй другой формат видео в настройках`)
+    lines.push(tr(`скачано в ${got}p, хотя доступно ${expected}p`, `downloaded at ${got}p although ${expected}p is available`))
+    lines.push(
+      tr(
+        `в формате ${videoFormat.toUpperCase()} лучше не нашлось: попробуй другой формат видео в настройках`,
+        `nothing better in ${videoFormat.toUpperCase()}: try another video format in the settings`,
+      ),
+    )
   }
   return lines.length ? lines : null
 }
@@ -193,7 +209,7 @@ const TCO_LINK_RE = /https?:\/\/t\.co\/\S+/gi
  * - X post with text:      [X] Text — @handle (id)
  */
 export function downloadLabel(info: YtInfo): DownloadLabel {
-  const title = (info.title || "Без названия").trim()
+  const title = (info.title || tr("Без названия", "Untitled")).trim()
   const uploader = (info.uploader || info.artist || info.channel || "Unknown").trim()
   const extractor = (info.extractor_key || info.extractor || "").toLowerCase()
 
@@ -204,7 +220,7 @@ export function downloadLabel(info: YtInfo): DownloadLabel {
     const caption = title.replace(TCO_LINK_RE, "").replace(/\s+/g, " ").trim()
     const name = `@${handle} (${String(info.id ?? "").trim()})`
     if (caption && !isUrl(caption)) return { platform: "X", title: caption, author: name }
-    return { platform: "X", title: `видео от ${name}`, author: null }
+    return { platform: "X", title: tr(`видео от ${name}`, `video by ${name}`), author: null }
   }
 
   return { platform: platformName(info), title, author: uploader }

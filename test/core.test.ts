@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { count, detectLanguage, setLanguage, tr } from "../src/core/i18n"
 import { formatBytes, formatDuration, plural, truncatePath } from "../src/core/format"
 import { describeQualityDrop, downloadLabel, labelText, relevantWarnings, toMediaInfo } from "../src/core/media"
 import { SettingsStore, migrateLegacy, normalizeSettings } from "../src/core/settings"
@@ -10,6 +11,8 @@ import { INTRO_KINDS, createIntro, nextIntro } from "../src/core/intro"
 import { leftoverCandidates, removeLeftovers } from "../src/core/cleanup"
 import { extractUrls, hideSchemes, isSoundCloudUrl, isYoutubeUrl } from "../src/core/urls"
 import { audioArgs, cleanError, downloadArgs, parseLine, splitArgs, videoFormatSelector } from "../src/core/ytdlp"
+
+setLanguage("ru")
 
 describe("extractUrls", () => {
   test("finds links inside messy text, trims punctuation, drops duplicates", () => {
@@ -223,6 +226,62 @@ describe("settings", () => {
     const again = new SettingsStore(path, legacy)
     expect(again.migrated).toBe(false)
     expect(again.get().audioDir).toBe(join(dir, "music"))
+  })
+})
+
+describe("language", () => {
+  const inEnglish = (fn: () => void) => {
+    setLanguage("en")
+    try {
+      fn()
+    } finally {
+      setLanguage("ru")
+    }
+  }
+
+  test("detects Russian from the system locale, anything else is English", () => {
+    expect(detectLanguage({ LANG: "ru_RU.UTF-8" })).toBe("ru")
+    expect(detectLanguage({ LC_ALL: "ru" })).toBe("ru")
+    expect(detectLanguage({ LANG: "en_US.UTF-8" })).toBe("en")
+    expect(detectLanguage({ LANG: "de_DE.UTF-8" })).toBe("en")
+  })
+
+  test("normalize keeps a valid language and ignores an unknown one", () => {
+    expect(normalizeSettings({ language: "en" }).language).toBe("en")
+    expect(normalizeSettings({ language: "ru" }).language).toBe("ru")
+    expect(["ru", "en"]).toContain(normalizeSettings({ language: "xx" }).language)
+  })
+
+  test("the store applies the saved language and switches it on update", () => {
+    const dir = mkdtempSync(join(tmpdir(), "fluxware-test-"))
+    const path = join(dir, "config.json")
+    writeFileSync(path, JSON.stringify({ language: "en" }))
+    const store = new SettingsStore(path, null)
+    try {
+      expect(tr("да", "yes")).toBe("yes")
+      store.update({ language: "ru" })
+      expect(tr("да", "yes")).toBe("да")
+      expect(JSON.parse(readFileSync(path, "utf8")).language).toBe("ru")
+    } finally {
+      setLanguage("ru")
+    }
+  })
+
+  test("counts nouns with Russian and English forms", () => {
+    expect(count(2, ["ссылка", "ссылки", "ссылок"], ["link", "links"])).toBe("ссылки")
+    inEnglish(() => {
+      expect(count(1, ["ссылка", "ссылки", "ссылок"], ["link", "links"])).toBe("link")
+      expect(count(2, ["ссылка", "ссылки", "ссылок"], ["link", "links"])).toBe("links")
+    })
+  })
+
+  test("sizes, dates and quality warnings follow the language", () => {
+    inEnglish(() => {
+      expect(formatBytes(1536)).toBe("1.5 KB")
+      expect(dayLabel(new Date(2026, 4, 9), new Date(2026, 9, 28, 12))).toBe("May 9")
+      expect(dayLabel(new Date(2025, 11, 31), new Date(2026, 9, 28, 12))).toBe("December 31, 2025")
+      expect(dayLabel(new Date(2026, 9, 28, 8), new Date(2026, 9, 28, 12))).toBe("today · October 28")
+    })
   })
 })
 

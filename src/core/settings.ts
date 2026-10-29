@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { dirname, join } from "node:path"
+import { LANGUAGES, detectLanguage, setLanguage, tr, type Language } from "./i18n"
 
 export type VideoFormat = "mp4" | "webm" | "mkv"
 export type AudioFormat = "opus" | "mp3" | "m4a"
@@ -24,6 +25,8 @@ export interface Settings {
   thumbnails: boolean
   /** Write finished downloads to the history log. */
   history: boolean
+  /** Interface language. */
+  language: Language
 }
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = {
@@ -35,6 +38,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   concurrency: 1,
   thumbnails: true,
   history: true,
+  language: "ru",
 }
 
 export function configPath(env: NodeJS.ProcessEnv = process.env, platform = process.platform, home = homedir()): string {
@@ -89,6 +93,7 @@ export function normalizeSettings(raw: unknown): Settings {
     concurrency: Math.min(MAX_CONCURRENCY, Math.max(1, concurrency || 1)),
     thumbnails: typeof r.thumbnails === "boolean" ? r.thumbnails : DEFAULT_SETTINGS.thumbnails,
     history: typeof r.history === "boolean" ? r.history : DEFAULT_SETTINGS.history,
+    language: pick(r.language, LANGUAGES, detectLanguage()),
   }
 }
 
@@ -122,12 +127,13 @@ export class SettingsStore {
     readonly path: string = configPath(),
     legacyPath: string | null = legacyConfigPath(),
   ) {
-    let settings: Settings = { ...DEFAULT_SETTINGS }
+    let settings: Settings = { ...DEFAULT_SETTINGS, language: detectLanguage() }
     if (existsSync(path)) {
       try {
         settings = normalizeSettings(JSON.parse(readFileSync(path, "utf8")))
       } catch (error) {
-        this.loadError = `не удалось прочитать настройки: ${error instanceof Error ? error.message : String(error)}`
+        setLanguage(settings.language)
+        this.loadError = `${tr("не удалось прочитать настройки", "could not read the settings")}: ${error instanceof Error ? error.message : String(error)}`
       }
     } else if (legacyPath && existsSync(legacyPath)) {
       try {
@@ -138,6 +144,7 @@ export class SettingsStore {
       }
     }
     this.settings = settings
+    setLanguage(settings.language)
     if (this.migrated) this.save()
   }
 
@@ -150,6 +157,7 @@ export class SettingsStore {
 
   update(patch: Partial<Settings>): void {
     this.settings = normalizeSettings({ ...this.settings, ...patch })
+    setLanguage(this.settings.language)
     this.save()
     for (const listener of this.listeners) listener()
   }

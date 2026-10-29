@@ -1,20 +1,24 @@
-const UNITS = ["Б", "КБ", "МБ", "ГБ", "ТБ"]
+import { tr } from "./i18n"
+
+const UNITS_RU = ["Б", "КБ", "МБ", "ГБ", "ТБ"]
+const UNITS_EN = ["B", "KB", "MB", "GB", "TB"]
 
 export function formatBytes(bytes: number | null | undefined): string {
   if (bytes == null || !Number.isFinite(bytes) || bytes < 0) return "—"
+  const units = tr("ru", "en") === "ru" ? UNITS_RU : UNITS_EN
   let value = bytes
   let unit = 0
-  while (value >= 1024 && unit < UNITS.length - 1) {
+  while (value >= 1024 && unit < units.length - 1) {
     value /= 1024
     unit++
   }
   const digits = unit === 0 || value >= 100 ? 0 : 1
-  return `${value.toFixed(digits)} ${UNITS[unit]}`
+  return `${value.toFixed(digits)} ${units[unit]}`
 }
 
 export function formatSpeed(bytesPerSecond: number | null | undefined): string {
   if (bytesPerSecond == null || !Number.isFinite(bytesPerSecond) || bytesPerSecond <= 0) return ""
-  return `${formatBytes(bytesPerSecond)}/с`
+  return `${formatBytes(bytesPerSecond)}${tr("/с", "/s")}`
 }
 
 /** 75 → "01:15", 3725 → "1:02:05". */

@@ -45,7 +45,7 @@ async function mount(
   ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
   const dir = mkdtempSync(join(tmpdir(), "fluxware-ui-"))
   const settings = new SettingsStore(join(dir, "config.json"), null)
-  settings.update({ videoDir: join(dir, "video"), audioDir: join(dir, "audio"), thumbnails: false })
+  settings.update({ videoDir: join(dir, "video"), audioDir: join(dir, "audio"), thumbnails: false, language: "ru" })
   const tools = options.tools === undefined ? fakeTools() : options.tools
   const queue = new DownloadQueue({ getTools: () => tools, getSettings: settings.get, mkdir: () => {}, throttleMs: 5 })
   const historyFile = join(dir, "history.jsonl")
@@ -363,6 +363,25 @@ describe("App", () => {
     await press((s) => s.mockInput.pressEnter())
     expect(settings.get().audioDir).toBe(target)
     expect(settings.get().videoDir).not.toBe(target)
+  })
+
+  test("settings: the language switch changes the whole interface and is saved", async () => {
+    const { settings, setup: s } = await mount({ section: "settings" })
+    for (let i = 0; i < 8; i++) await press((x) => x.mockInput.pressArrow("down"))
+    expect(s.captureCharFrame()).toContain("Русский")
+    await press((x) => x.mockInput.pressArrow("right"))
+    const frame = s.captureCharFrame()
+    expect(settings.get().language).toBe("en")
+    expect(frame).toContain("video format")
+    expect(frame).toContain("English")
+    const tabs = frame.split("\n")[1]!
+    expect(tabs).toContain("download")
+    expect(tabs).toContain("about")
+    expect(tabs).not.toContain("скачка")
+    expect(frame).toContain("interface language.")
+    await press((x) => x.mockInput.pressArrow("left"))
+    expect(settings.get().language).toBe("ru")
+    expect(s.captureCharFrame().split("\n")[1]).toContain("скачка")
   })
 
   test("batch: pasted text becomes queued links", async () => {

@@ -1,4 +1,5 @@
 import { stripAnsi } from "./format"
+import { tr } from "./i18n"
 import { toMediaInfo, type MediaInfo, type YtInfo } from "./media"
 import { captureOutput, runProcess } from "./process"
 import type { AudioFormat, VideoFormat } from "./settings"
@@ -84,7 +85,7 @@ export function splitArgs(input: string): { args: string[]; error: string | null
       inToken = true
     }
   }
-  if (quote) return { args: [], error: "не закрыта кавычка" }
+  if (quote) return { args: [], error: tr("не закрыта кавычка", "unclosed quote") }
   if (inToken) args.push(current)
   return { args, error: null }
 }
@@ -153,12 +154,12 @@ export async function fetchInfo(
 
   const json = stdout.find((line) => line.startsWith("{"))
   if (result.code !== 0 || !json) {
-    return { info: null, error: error ?? "yt-dlp не вернул информацию", aborted: false }
+    return { info: null, error: error ?? tr("yt-dlp не вернул информацию", "yt-dlp returned no information"), aborted: false }
   }
   try {
     return { info: toMediaInfo(url, JSON.parse(json) as YtInfo, warnings), error: null, aborted: false }
   } catch {
-    return { info: null, error: "не удалось разобрать ответ yt-dlp", aborted: false }
+    return { info: null, error: tr("не удалось разобрать ответ yt-dlp", "could not parse the yt-dlp response"), aborted: false }
   }
 }
 
@@ -345,22 +346,24 @@ export function parseLine(raw: string): YtEvent {
   return { type: "other", line }
 }
 
-const POSTPROCESSOR_NAMES: Record<string, string> = {
-  Merger: "склейка дорожек",
-  ExtractAudio: "извлечение звука",
-  ThumbnailsConvertor: "обложка",
-  EmbedThumbnail: "вшивание обложки",
-  Metadata: "метаданные",
-  FFmpegMetadata: "метаданные",
-  VideoConvertor: "конвертация",
-  VideoRemuxer: "перепаковка",
-  MoveFiles: "перенос файла",
-  FixupM3u8: "исправление потока",
-  FixupM4a: "исправление контейнера",
-  FixupDuplicateMoov: "исправление контейнера",
-  FixupTimestamp: "исправление таймингов",
+/** Russian and English names of the yt-dlp post-processing steps. */
+const POSTPROCESSOR_NAMES: Record<string, [string, string]> = {
+  Merger: ["склейка дорожек", "merging tracks"],
+  ExtractAudio: ["извлечение звука", "extracting audio"],
+  ThumbnailsConvertor: ["обложка", "cover"],
+  EmbedThumbnail: ["вшивание обложки", "embedding the cover"],
+  Metadata: ["метаданные", "metadata"],
+  FFmpegMetadata: ["метаданные", "metadata"],
+  VideoConvertor: ["конвертация", "converting"],
+  VideoRemuxer: ["перепаковка", "remuxing"],
+  MoveFiles: ["перенос файла", "moving the file"],
+  FixupM3u8: ["исправление потока", "fixing the stream"],
+  FixupM4a: ["исправление контейнера", "fixing the container"],
+  FixupDuplicateMoov: ["исправление контейнера", "fixing the container"],
+  FixupTimestamp: ["исправление таймингов", "fixing timestamps"],
 }
 
 export function postprocessorLabel(name: string): string {
-  return POSTPROCESSOR_NAMES[name] ?? name
+  const names = POSTPROCESSOR_NAMES[name]
+  return names ? tr(names[0], names[1]) : name
 }

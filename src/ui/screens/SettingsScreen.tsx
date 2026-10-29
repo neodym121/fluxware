@@ -3,7 +3,8 @@ import { resolve } from "node:path"
 import type { BoxRenderable } from "@opentui/core"
 import { useBindings } from "@opentui/keymap/react"
 import { useRef, useState } from "react"
-import { plural, truncatePath } from "../../core/format"
+import { truncatePath } from "../../core/format"
+import { LANGUAGES, LANGUAGE_NAMES, count, getLanguage, tr } from "../../core/i18n"
 import { revealInFileManager } from "../../core/process"
 import {
   AUDIO_FORMATS,
@@ -22,22 +23,42 @@ import { theme } from "../theme"
 import { cleanPathInput } from "./BatchScreen"
 import { ErrorLine, type ScreenProps } from "./shared"
 
-type RowKey = "videoFormat" | "audioFormat" | "videoDir" | "audioDir" | "ytdlpArgs" | "concurrency" | "thumbnails" | "history"
+type RowKey = "videoFormat" | "audioFormat" | "videoDir" | "audioDir" | "ytdlpArgs" | "concurrency" | "thumbnails" | "history" | "language"
 type EditKey = "videoDir" | "audioDir" | "ytdlpArgs"
 
-const HELP: Record<RowKey, string> = {
-  videoFormat:
-    "контейнер видео. MP4 открывается везде, WEBM чаще даёт 4K на YouTube, MKV берёт лучшие дорожки без ограничений по кодекам.",
-  audioFormat:
-    "OPUS и M4A с YouTube скачиваются без перекодирования. MP3 перекодируется в 192 кбит/с, зато играет на любом устройстве.",
-  videoDir: "куда сохраняются видео.",
-  audioDir: "куда сохраняются аудио.",
-  ytdlpArgs:
-    "параметры yt-dlp как в командной строке. применяются ко всем загрузкам и перебивают настройки fluxware при конфликте.",
-  concurrency: "сколько загрузок идёт одновременно. остальные ждут в очереди.",
-  thumbnails: "превью обложек в разделе «скачка».",
-  history:
-    "записывать скачанное в лог истории с датой и временем. выключенная история не стирает уже записанное, новые загрузки видны только до выхода.",
+function help(key: RowKey): string {
+  switch (key) {
+    case "videoFormat":
+      return tr(
+        "контейнер видео. MP4 открывается везде, WEBM чаще даёт 4K на YouTube, MKV берёт лучшие дорожки без ограничений по кодекам.",
+        "video container. MP4 opens everywhere, WEBM more often gives 4K on YouTube, MKV takes the best tracks with no codec limits.",
+      )
+    case "audioFormat":
+      return tr(
+        "OPUS и M4A с YouTube скачиваются без перекодирования. MP3 перекодируется в 192 кбит/с, зато играет на любом устройстве.",
+        "OPUS and M4A from YouTube are saved without re-encoding. MP3 is encoded at 192 kbit/s but plays on any device.",
+      )
+    case "videoDir":
+      return tr("куда сохраняются видео.", "where videos are saved.")
+    case "audioDir":
+      return tr("куда сохраняются аудио.", "where audio is saved.")
+    case "ytdlpArgs":
+      return tr(
+        "параметры yt-dlp как в командной строке. применяются ко всем загрузкам и перебивают настройки fluxware при конфликте.",
+        "yt-dlp options as on the command line. They apply to every download and override fluxware's own on conflict.",
+      )
+    case "concurrency":
+      return tr("сколько загрузок идёт одновременно. остальные ждут в очереди.", "how many downloads run at once. the rest wait in the queue.")
+    case "thumbnails":
+      return tr("превью обложек в разделе «скачка».", "cover previews in the \"download\" section.")
+    case "history":
+      return tr(
+        "записывать скачанное в лог истории с датой и временем. выключенная история не стирает уже записанное, новые загрузки видны только до выхода.",
+        "write downloads to the history log with the date and time. Turning it off does not erase what is already recorded; new downloads stay visible until you quit.",
+      )
+    case "language":
+      return tr("язык интерфейса.", "interface language.")
+  }
 }
 
 function cycleValue<T>(list: readonly T[], current: T, direction: 1 | -1): T {
@@ -48,16 +69,17 @@ function cycleValue<T>(list: readonly T[], current: T, direction: 1 | -1): T {
 function rows(s: Settings, width: number): MenuItem[] {
   const pathWidth = Math.max(16, width - 26)
   const dirValue = (custom: string | null, effective: string) =>
-    truncatePath(effective, pathWidth) + (custom ? "" : "  (по умолчанию)")
+    truncatePath(effective, pathWidth) + (custom ? "" : tr("  (по умолчанию)", "  (default)"))
   return [
-    { key: "videoFormat", label: "формат видео", value: s.videoFormat.toUpperCase(), hint: "←/→" },
-    { key: "audioFormat", label: "формат аудио", value: s.audioFormat.toUpperCase(), hint: "←/→" },
-    { key: "videoDir", label: "папка для видео", value: dirValue(s.videoDir, videoDirOf(s)) },
-    { key: "audioDir", label: "папка для аудио", value: dirValue(s.audioDir, audioDirOf(s)) },
-    { key: "ytdlpArgs", label: "параметры yt-dlp", value: s.ytdlpArgs ? truncatePath(s.ytdlpArgs, pathWidth) : "не заданы" },
-    { key: "concurrency", label: "одновременно", value: `${s.concurrency} ${plural(s.concurrency, "загрузка", "загрузки", "загрузок")}`, hint: "←/→" },
-    { key: "thumbnails", label: "превью обложек", value: s.thumbnails ? "вкл" : "выкл", hint: "←/→" },
-    { key: "history", label: "история загрузок", value: s.history ? "вкл" : "выкл", hint: "←/→" },
+    { key: "videoFormat", label: tr("формат видео", "video format"), value: s.videoFormat.toUpperCase(), hint: "←/→" },
+    { key: "audioFormat", label: tr("формат аудио", "audio format"), value: s.audioFormat.toUpperCase(), hint: "←/→" },
+    { key: "videoDir", label: tr("папка для видео", "video folder"), value: dirValue(s.videoDir, videoDirOf(s)) },
+    { key: "audioDir", label: tr("папка для аудио", "audio folder"), value: dirValue(s.audioDir, audioDirOf(s)) },
+    { key: "ytdlpArgs", label: tr("параметры yt-dlp", "yt-dlp options"), value: s.ytdlpArgs ? truncatePath(s.ytdlpArgs, pathWidth) : tr("не заданы", "not set") },
+    { key: "concurrency", label: tr("одновременно", "at a time"), value: `${s.concurrency} ${count(s.concurrency, ["загрузка", "загрузки", "загрузок"], ["download", "downloads"])}`, hint: "←/→" },
+    { key: "thumbnails", label: tr("превью обложек", "cover previews"), value: s.thumbnails ? tr("вкл", "on") : tr("выкл", "off"), hint: "←/→" },
+    { key: "history", label: tr("история загрузок", "download history"), value: s.history ? tr("вкл", "on") : tr("выкл", "off"), hint: "←/→" },
+    { key: "language", label: tr("язык", "language"), value: LANGUAGE_NAMES[s.language], hint: "←/→" },
   ]
 }
 
@@ -87,7 +109,7 @@ export function SettingsScreen(props: ScreenProps) {
       bindings: [
         {
           key: "escape",
-          desc: "назад",
+          desc: tr("назад", "back"),
           cmd: () => {
             if (!latest.current.editing) return false
             stopEditing()
@@ -97,7 +119,7 @@ export function SettingsScreen(props: ScreenProps) {
           ? [
               {
                 key: "o, щ",
-                desc: "открыть папку",
+                desc: tr("открыть папку", "open folder"),
                 cmd: () => {
                   const s = services.settings.get()
                   const dir = latest.current.current === "videoDir" ? videoDirOf(s) : audioDirOf(s)
@@ -105,7 +127,7 @@ export function SettingsScreen(props: ScreenProps) {
                     mkdirSync(dir, { recursive: true })
                     revealInFileManager({ dir })
                   } catch (e) {
-                    services.toast(`не удалось открыть папку: ${e instanceof Error ? e.message : e}`, "error")
+                    services.toast(`${tr("не удалось открыть папку", "could not open the folder")}: ${e instanceof Error ? e.message : e}`, "error")
                   }
                 },
               },
@@ -113,7 +135,7 @@ export function SettingsScreen(props: ScreenProps) {
           : []),
       ],
     }),
-    [folderRow],
+    [folderRow, getLanguage()],
   )
 
   function stopEditing() {
@@ -149,6 +171,9 @@ export function SettingsScreen(props: ScreenProps) {
       case "thumbnails":
         services.settings.update({ thumbnails: !s.thumbnails })
         return true
+      case "language":
+        services.settings.update({ language: cycleValue(LANGUAGES, s.language, direction) })
+        return true
       default:
         return false
     }
@@ -165,13 +190,13 @@ export function SettingsScreen(props: ScreenProps) {
     const fallback = key === "videoDir" ? defaultVideoDir() : defaultAudioDir()
     if (!path) {
       services.settings.update({ [key]: null })
-      services.toast(`папка по умолчанию: ${fallback}`, "ok")
+      services.toast(`${tr("папка по умолчанию", "default folder")}: ${fallback}`, "ok")
       stopEditing()
       return
     }
     const absolute = resolve(path)
     if (existsSync(absolute)) {
-      if (!statSync(absolute).isDirectory()) return setError(`это файл, а не папка: ${absolute}`)
+      if (!statSync(absolute).isDirectory()) return setError(`${tr("это файл, а не папка", "this is a file, not a folder")}: ${absolute}`)
     } else if (confirmCreate !== absolute) {
       setConfirmCreate(absolute)
       setError(null)
@@ -180,11 +205,16 @@ export function SettingsScreen(props: ScreenProps) {
       try {
         mkdirSync(absolute, { recursive: true })
       } catch (e) {
-        return setError(`не удалось создать папку: ${e instanceof Error ? e.message : e}`)
+        return setError(`${tr("не удалось создать папку", "could not create the folder")}: ${e instanceof Error ? e.message : e}`)
       }
     }
     services.settings.update({ [key]: absolute })
-    services.toast(`${key === "videoDir" ? "видео" : "аудио"} теперь сохраняются в ${absolute}`, "ok")
+    services.toast(
+      key === "videoDir"
+        ? tr(`видео теперь сохраняются в ${absolute}`, `videos are now saved to ${absolute}`)
+        : tr(`аудио теперь сохраняются в ${absolute}`, `audio is now saved to ${absolute}`),
+      "ok",
+    )
     stopEditing()
   }
 
@@ -192,18 +222,21 @@ export function SettingsScreen(props: ScreenProps) {
     const value = raw.trim()
     if (!value) {
       services.settings.update({ ytdlpArgs: "" })
-      services.toast("параметры yt-dlp очищены", "ok")
+      services.toast(tr("параметры yt-dlp очищены", "yt-dlp options cleared"), "ok")
       stopEditing()
       return
     }
     const ytdlp = services.tools?.ytdlp
-    if (!ytdlp) return setError("yt-dlp не найден: проверить параметры нечем")
+    if (!ytdlp) return setError(tr("yt-dlp не найден: проверить параметры нечем", "yt-dlp not found: nothing to check the options with"))
     setChecking(true)
     const check = await checkCustomArgs(ytdlp, value)
     setChecking(false)
-    if (!check.ok) return setError(`ошибка в параметрах: ${check.error}`)
+    if (!check.ok) return setError(`${tr("ошибка в параметрах", "invalid options")}: ${check.error}`)
     services.settings.update({ ytdlpArgs: value })
-    services.toast(`сохранено: ${check.optionCount} ${plural(check.optionCount, "параметр", "параметра", "параметров")}`, "ok")
+    services.toast(
+      `${tr("сохранено", "saved")}: ${check.optionCount} ${count(check.optionCount, ["параметр", "параметра", "параметров"], ["option", "options"])}`,
+      "ok",
+    )
     stopEditing()
   }
 
@@ -233,7 +266,9 @@ export function SettingsScreen(props: ScreenProps) {
       {editing ? (
         <box flexDirection="column" marginTop={1} flexShrink={0}>
           <text fg={theme.muted}>
-            {editing === "ytdlpArgs" ? "параметры yt-dlp · пусто — очистить" : "путь до папки · пусто — папка по умолчанию"}
+            {editing === "ytdlpArgs"
+              ? tr("параметры yt-dlp · пусто — очистить", "yt-dlp options · empty — clear")
+              : tr("путь до папки · пусто — папка по умолчанию", "folder path · empty — default folder")}
           </text>
           <PromptInput
             value={draft}
@@ -245,11 +280,11 @@ export function SettingsScreen(props: ScreenProps) {
             focused={props.focused}
             selectOnFocus
           />
-          {checking ? <Spinner text="проверяю параметры…" /> : null}
+          {checking ? <Spinner text={tr("проверяю параметры…", "checking options…")} /> : null}
           {confirmCreate ? (
             <box flexDirection="column" flexShrink={0}>
-              <text fg={theme.warn} wrapMode="word">{`! такой папки нет: ${confirmCreate}`}</text>
-              <text fg={theme.muted}>enter — создать · esc — отмена</text>
+              <text fg={theme.warn} wrapMode="word">{`! ${tr("такой папки нет", "no such folder")}: ${confirmCreate}`}</text>
+              <text fg={theme.muted}>{tr("enter — создать · esc — отмена", "enter — create · esc — cancel")}</text>
             </box>
           ) : null}
           <ErrorLine text={error} />
@@ -259,7 +294,7 @@ export function SettingsScreen(props: ScreenProps) {
       <box flexGrow={1} />
       {current ? (
         <text fg={theme.faint} wrapMode="word" flexShrink={0}>
-          {HELP[current]}
+          {help(current)}
         </text>
       ) : null}
     </box>

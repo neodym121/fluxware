@@ -4,6 +4,7 @@ import { existsSync } from "node:fs"
 import { basename } from "node:path"
 import { useEffect, useRef, useState } from "react"
 import { groupByDay, timeLabel, type HistoryEntry } from "../../core/history"
+import { getLanguage, tr } from "../../core/i18n"
 import { revealInFileManager } from "../../core/process"
 import { isFinished, type Job } from "../../core/queue"
 import { JobRow } from "../components"
@@ -52,7 +53,7 @@ export function HistoryScreen(props: ScreenProps) {
     const file = entry.files.length === 1 ? entry.files[0] : null
     const gone = file ? !existsSync(file) : !existsSync(entry.dir)
     if (gone) {
-      setMissing(file ? `файл не найден: ${basename(file)}` : `папка не найдена: ${entry.dir}`)
+      setMissing(file ? `${tr("файл не найден", "file not found")}: ${basename(file)}` : `${tr("папка не найдена", "folder not found")}: ${entry.dir}`)
       if (missingTimer.current) clearTimeout(missingTimer.current)
       missingTimer.current = setTimeout(() => setMissing(null), 6000)
       return
@@ -67,7 +68,7 @@ export function HistoryScreen(props: ScreenProps) {
   const current = jobs.filter((j) => j.status !== "done")
   const rows: Row[] = []
   if (current.length) {
-    rows.push({ kind: "header", key: "h-now", label: "сейчас" })
+    rows.push({ kind: "header", key: "h-now", label: tr("сейчас", "now") })
     for (const job of [...current].reverse()) rows.push({ kind: "job", key: `j${job.id}`, job })
   }
   for (const day of groupByDay(entries)) {
@@ -98,15 +99,15 @@ export function HistoryScreen(props: ScreenProps) {
       targetMode: "focus",
       priority: 20,
       bindings: [
-        { key: "up", desc: "выбор", cmd: () => move(-1) },
-        { key: "down", desc: "выбор", cmd: () => move(1) },
+        { key: "up", desc: tr("выбор", "select"), cmd: () => move(-1) },
+        { key: "down", desc: tr("выбор", "select"), cmd: () => move(1) },
         { key: "k", cmd: () => move(-1) },
         { key: "j", cmd: () => move(1) },
         { key: "pageup", cmd: () => move(-10) },
         { key: "pagedown", cmd: () => move(10) },
         {
           key: "return",
-          desc: "открыть папку",
+          desc: tr("открыть папку", "open folder"),
           cmd: () => {
             const row = latest.current.selected
             if (row?.kind === "entry") openRef.current(row.entry)
@@ -115,7 +116,7 @@ export function HistoryScreen(props: ScreenProps) {
         },
         {
           key: "delete",
-          desc: "отменить/удалить",
+          desc: tr("отменить/удалить", "cancel/remove"),
           cmd: () => {
             const row = latest.current.selected
             if (row?.kind === "entry") history.remove(row.entry.id)
@@ -127,27 +128,30 @@ export function HistoryScreen(props: ScreenProps) {
         },
         {
           key: "r, к",
-          desc: "повторить",
+          desc: tr("повторить", "retry"),
           cmd: () => {
             const row = latest.current.selected
             if (row?.kind === "job" && (row.job.status === "failed" || row.job.status === "canceled")) queue.retry(row.job.id)
             else if (row?.kind === "entry") {
               const e = row.entry
               queue.add([{ url: e.url, kind: e.kind, height: e.height, source: "download", dir: e.dir }])
-              toast(`снова в очереди: ${e.title}`, "ok")
+              toast(`${tr("снова в очереди", "queued again")}: ${e.title}`, "ok")
             }
           },
         },
       ],
     }),
-    [],
+    [getLanguage()],
   )
 
   return (
     <box flexDirection="column" flexGrow={1}>
       {!settings.history ? (
         <text fg={theme.faint} wrapMode="none">
-          история не сохраняется: включи её в настройках. сейчас видны только загрузки этого запуска
+          {tr(
+            "история не сохраняется: включи её в настройках. сейчас видны только загрузки этого запуска",
+            "history is not saved: turn it on in the settings. only downloads of this session are shown",
+          )}
         </text>
       ) : null}
       <scrollbox
@@ -159,7 +163,10 @@ export function HistoryScreen(props: ScreenProps) {
       >
         {rows.length === 0 ? (
           <text fg={theme.faint} wrapMode="word">
-            история пуста. всё, что скачается в разделах «скачка» и «пакет», появится здесь с датой и временем.
+            {tr(
+              "история пуста. всё, что скачается в разделах «скачка» и «пакет», появится здесь с датой и временем.",
+              "the history is empty. everything downloaded in the \"download\" and \"batch\" sections will appear here with the date and time.",
+            )}
           </text>
         ) : (
           rows.map((row, i) => {

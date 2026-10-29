@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs"
+import { tr } from "./i18n"
 import { leftoverCandidates, removeLeftovers } from "./cleanup"
 import { describeQualityDrop, downloadLabel, type DownloadLabel, type YtInfo } from "./media"
 import { runProcess, type RunOptions, type RunResult } from "./process"
@@ -315,13 +316,13 @@ export class DownloadQueue {
 
     const tools = this.deps.getTools()
     if (!tools?.ytdlp) {
-      finish({ status: "failed", error: "yt-dlp не найден: установи его и перезапусти fluxware" })
+      finish({ status: "failed", error: tr("yt-dlp не найден: установи его и перезапусти fluxware", "yt-dlp not found: install it and restart fluxware") })
       return
     }
     try {
       this.mkdir(initial.dir)
     } catch (error) {
-      finish({ status: "failed", error: `не удалось создать папку ${initial.dir}: ${error instanceof Error ? error.message : error}` })
+      finish({ status: "failed", error: `${tr("не удалось создать папку", "could not create the folder")} ${initial.dir}: ${error instanceof Error ? error.message : error}` })
       return
     }
 
@@ -429,12 +430,12 @@ export class DownloadQueue {
 
     if (result.aborted) {
       // A canceled download leaves .part pieces and the cover; remove what this run created.
-      this.patch(id, { phase: "processing", postprocessor: "удаление временных файлов", speed: null, eta: null })
+      this.patch(id, { phase: "processing", postprocessor: tr("удаление временных файлов", "removing temporary files"), speed: null, eta: null })
       this.emitNow()
       await removeLeftovers(await leftoverCandidates(streams, outputs), startedAt)
       finish({ status: "canceled" })
     }
     else if (result.code === 0) finish({ status: "done", progress: 1 })
-    else finish({ status: "failed", error: errors.at(-1) ?? lastStderr ?? `yt-dlp завершился с кодом ${result.code}` })
+    else finish({ status: "failed", error: errors.at(-1) ?? lastStderr ?? tr(`yt-dlp завершился с кодом ${result.code}`, `yt-dlp exited with code ${result.code}`) })
   }
 }

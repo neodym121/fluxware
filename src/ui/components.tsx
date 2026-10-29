@@ -4,6 +4,7 @@ import { useRenderer } from "@opentui/react"
 import { useEffect, useRef, type ReactNode } from "react"
 import { basename } from "node:path"
 import { formatDuration, formatSpeed, truncate } from "../core/format"
+import { count, getLanguage, tr } from "../core/i18n"
 import { hideSchemes, shortUrl } from "../core/urls"
 import type { Job } from "../core/queue"
 import { useSpinner } from "./context"
@@ -63,19 +64,19 @@ export function Menu(props: MenuProps) {
       targetMode: "focus",
       priority: 20,
       bindings: [
-        { key: "up", desc: "выбор", cmd: () => move(-1) },
-        { key: "down", desc: "выбор", cmd: () => move(1) },
+        { key: "up", desc: tr("выбор", "select"), cmd: () => move(-1) },
+        { key: "down", desc: tr("выбор", "select"), cmd: () => move(1) },
         { key: "k", cmd: () => move(-1) },
         { key: "j", cmd: () => move(1) },
         { key: "home", cmd: () => jump(0) },
         { key: "end", cmd: () => jump(latest.current.items.length - 1) },
-        { key: "return", desc: "выбрать", cmd: () => activate() },
+        { key: "return", desc: tr("выбрать", "choose"), cmd: () => activate() },
         { key: "space", cmd: () => activate() },
         { key: "left", cmd: () => cycle(-1) },
         { key: "right", cmd: () => cycle(1) },
       ],
     }),
-    [],
+    [getLanguage()],
   )
 
   function move(delta: number): boolean | void {
@@ -241,24 +242,26 @@ export function Spinner(props: { text: string }) {
 
 export function jobTitle(job: Job): { platform: string; title: string; author: string | null } {
   if (job.label) return job.label
-  return { platform: job.kind === "audio" ? "аудио" : "видео", title: shortUrl(job.url, 80), author: null }
+  return { platform: job.kind === "audio" ? tr("аудио", "audio") : tr("видео", "video"), title: shortUrl(job.url, 80), author: null }
 }
 
 /** Right-hand status text of a job, without the bar. */
 export function jobStatusText(job: Job): string {
   switch (job.status) {
     case "queued":
-      return "в очереди"
+      return tr("в очереди", "queued")
     case "canceled":
-      return "отменено"
+      return tr("отменено", "canceled")
     case "failed":
-      return "ошибка"
+      return tr("ошибка", "error")
     case "done":
-      return job.files.length > 1 ? `готово · ${job.files.length} файлов` : "готово"
+      return job.files.length > 1
+        ? `${tr("готово", "done")} · ${job.files.length} ${count(job.files.length, ["файл", "файла", "файлов"], ["file", "files"])}`
+        : tr("готово", "done")
     case "running": {
       const item = job.item ? `${job.item.index}/${job.item.count} · ` : ""
-      if (job.phase === "processing") return item + (job.postprocessor ?? "обработка")
-      if (job.phase === "starting" || job.progress == null) return item + "подготовка"
+      if (job.phase === "processing") return item + (job.postprocessor ?? tr("обработка", "processing"))
+      if (job.phase === "starting" || job.progress == null) return item + tr("подготовка", "preparing")
       const pct = `${Math.floor((job.progress ?? 0) * 100)}%`
       const speed = formatSpeed(job.speed)
       const eta = job.eta != null && job.eta > 0 ? formatDuration(job.eta) : ""
@@ -283,19 +286,21 @@ export function JobProgress(props: { job: Job; width: number; left?: ReactNode }
   if (job.status === "failed") {
     return (
       <text fg={theme.error} wrapMode="word">
-        {"✗ " + hideSchemes(job.error ?? "ошибка")}
+        {"✗ " + hideSchemes(job.error ?? tr("ошибка", "error"))}
       </text>
     )
   }
-  if (job.status === "canceled") return <text fg={theme.muted}>– отменено</text>
+  if (job.status === "canceled") return <text fg={theme.muted}>{"– " + tr("отменено", "canceled")}</text>
   if (job.status === "done") {
     const file = job.files.at(-1)
     return (
       <box flexDirection="column" flexShrink={0}>
         <text wrapMode="none">
-          <span fg={theme.accent}>{"✓ готово"}</span>
+          <span fg={theme.accent}>{"✓ " + tr("готово", "done")}</span>
           <span fg={theme.muted}>
-            {job.files.length > 1 ? ` · ${job.files.length} файлов` : file ? ` · ${truncate(basename(file), props.width - 10)}` : ""}
+            {job.files.length > 1
+              ? ` · ${job.files.length} ${count(job.files.length, ["файл", "файла", "файлов"], ["file", "files"])}`
+              : file ? ` · ${truncate(basename(file), props.width - 10)}` : ""}
           </span>
         </text>
         {job.warnings.map((w, i) => (
@@ -330,7 +335,7 @@ export function JobRow(props: { job: Job; width: number; selected?: boolean; sta
   const { job } = props
   const t = jobTitle(job)
   const running = job.status === "running"
-  const status = job.status === "failed" ? `ошибка: ${hideSchemes(job.error ?? "")}` : jobStatusText(job)
+  const status = job.status === "failed" ? `${tr("ошибка", "error")}: ${hideSchemes(job.error ?? "")}` : jobStatusText(job)
   const statusWidth = props.stacked ? props.width : Math.min(Math.max(12, Math.floor(props.width * 0.45)), job.status === "failed" ? 60 : 34)
   const barWidth = running && props.width >= 70 ? (props.stacked ? 24 : 12) : 0
   const title = (
@@ -429,12 +434,12 @@ export function FocusButton(props: {
       targetMode: "focus",
       priority: 20,
       bindings: [
-        { key: "return", desc: "нажать", cmd: () => (latest.current.disabled ? false : latest.current.onPress()) },
+        { key: "return", desc: tr("нажать", "press"), cmd: () => (latest.current.disabled ? false : latest.current.onPress()) },
         { key: "space", cmd: () => (latest.current.disabled ? false : latest.current.onPress()) },
         { key: "up", cmd: () => (latest.current.onExitTop ? latest.current.onExitTop() : false) },
       ],
     }),
-    [],
+    [getLanguage()],
   )
   return (
     <box ref={ref} focusable focused={props.focused} flexShrink={0}>
@@ -490,15 +495,15 @@ export function ButtonRow(props: {
       targetMode: "focus",
       priority: 20,
       bindings: [
-        { key: "left", desc: "кнопка", cmd: () => move(-1) },
-        { key: "right", desc: "кнопка", cmd: () => move(1) },
-        { key: "return", desc: "нажать", cmd: () => press() },
+        { key: "left", desc: tr("кнопка", "button"), cmd: () => move(-1) },
+        { key: "right", desc: tr("кнопка", "button"), cmd: () => move(1) },
+        { key: "return", desc: tr("нажать", "press"), cmd: () => press() },
         { key: "space", cmd: () => press() },
         { key: "up", cmd: () => (latest.current.onExitTop ? latest.current.onExitTop() : false) },
         { key: "down", cmd: () => (latest.current.onExitBottom ? latest.current.onExitBottom() : false) },
       ],
     }),
-    [],
+    [getLanguage()],
   )
 
   return (

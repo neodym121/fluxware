@@ -1,8 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import { DownloadQueue, type Job } from "../src/core/queue"
+import { setLanguage } from "../src/core/i18n"
 import { DEFAULT_SETTINGS, type Settings } from "../src/core/settings"
 import type { Tools } from "../src/core/ytdlp"
 import { fakeTools } from "./fixtures/tools"
+
+setLanguage("ru")
 
 function waitFor(queue: DownloadQueue, predicate: (jobs: readonly Job[]) => boolean, timeoutMs = 10000): Promise<readonly Job[]> {
   return new Promise((resolve, reject) => {

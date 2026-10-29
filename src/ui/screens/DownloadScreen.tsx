@@ -1,7 +1,8 @@
 import type { BoxRenderable } from "@opentui/core"
 import { useBindings } from "@opentui/keymap/react"
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { formatDuration, plural } from "../../core/format"
+import { formatDuration } from "../../core/format"
+import { count, getLanguage, tr } from "../../core/i18n"
 import { downloadLabel, type MediaInfo } from "../../core/media"
 import { isFinished } from "../../core/queue"
 import { audioDirOf, videoDirOf } from "../../core/settings"
@@ -24,7 +25,7 @@ type Stage =
   | { kind: "started"; info: MediaInfo | null; jobIds: number[] }
 
 const PLAYLIST_HEIGHTS = [2160, 1440, 1080, 720, 480]
-const PLATFORMS = "youtube · soundcloud · x · instagram · tiktok · vk · +1800 сайтов"
+const platforms = () => `youtube · soundcloud · x · instagram · tiktok · vk · +1800 ${tr("сайтов", "sites")}`
 
 /** Sources without any video track: SoundCloud, Bandcamp, podcasts. */
 function isAudioOnly(info: MediaInfo): boolean {
@@ -37,16 +38,16 @@ function isAudioOnly(info: MediaInfo): boolean {
 function choices(stage: Stage): MenuItem[] {
   if (stage.kind === "many") {
     return [
-      { key: "all-video", label: "все как видео" },
-      { key: "all-audio", label: "все как аудио" },
+      { key: "all-video", label: tr("все как видео", "all as video") },
+      { key: "all-audio", label: tr("все как аудио", "all as audio") },
     ]
   }
   if (stage.kind !== "ready") return []
   const info = stage.info
-  if (isAudioOnly(info)) return [{ key: "audio", label: info.isPlaylist ? "скачать все треки" : "скачать аудио" }]
+  if (isAudioOnly(info)) return [{ key: "audio", label: info.isPlaylist ? tr("скачать все треки", "download all tracks") : tr("скачать аудио", "download audio") }]
   const heights = info.isPlaylist ? PLAYLIST_HEIGHTS : [...info.heights].reverse().filter((h) => h >= 144).slice(0, 8)
-  const items: MenuItem[] = heights.length ? heights.map((h) => ({ key: `h${h}`, label: `${h}p` })) : [{ key: "best", label: "видео" }]
-  items.push({ key: "audio", label: "только звук" })
+  const items: MenuItem[] = heights.length ? heights.map((h) => ({ key: `h${h}`, label: `${h}p` })) : [{ key: "best", label: tr("видео", "video") }]
+  items.push({ key: "audio", label: tr("только звук", "audio only") })
   return items
 }
 
@@ -56,7 +57,7 @@ function InfoCard(props: { info: MediaInfo; showThumb: boolean; onThumbError: ()
   const meta = [
     info.uploader,
     info.platform,
-    info.isPlaylist ? `плейлист · ${info.entryCount} ${plural(info.entryCount, "элемент", "элемента", "элементов")}` : formatDuration(info.duration),
+    info.isPlaylist ? `${tr("плейлист", "playlist")} · ${info.entryCount} ${count(info.entryCount, ["элемент", "элемента", "элементов"], ["item", "items"])}` : formatDuration(info.duration),
   ]
   return (
     <box flexDirection="row" flexShrink={0}>
@@ -80,14 +81,14 @@ function InfoCard(props: { info: MediaInfo; showThumb: boolean; onThumbError: ()
         {info.fallbackOnly ? (
           <box flexDirection="column" flexShrink={0}>
             <text fg={theme.warn} wrapMode="word">
-              ! YouTube отдал только запасной формат: нормальных качеств сейчас нет
+              {tr("! YouTube отдал только запасной формат: нормальных качеств сейчас нет", "! YouTube returned only a fallback format: no regular qualities right now")}
             </text>
             {info.warnings.map((w) => (
               <text key={w} fg={theme.faint} wrapMode="word">
                 {"  yt-dlp: " + hideSchemes(w)}
               </text>
             ))}
-            <text fg={theme.faint}>  обычно это временно: попробуй позже или обнови yt-dlp</text>
+            <text fg={theme.faint}>{"  " + tr("обычно это временно: попробуй позже или обнови yt-dlp", "this is usually temporary: try later or update yt-dlp")}</text>
           </box>
         ) : null}
         <box marginTop={1} flexShrink={0} flexDirection="column">
@@ -142,7 +143,7 @@ export function DownloadScreen(props: ScreenProps) {
       bindings: [
         {
           key: "escape",
-          desc: "назад",
+          desc: tr("назад", "back"),
           cmd: () => {
             const s = latest.current
             if (s.stage.kind === "loading") {
@@ -160,7 +161,7 @@ export function DownloadScreen(props: ScreenProps) {
         // The quality choices hold focus until Esc, so Tab does nothing there.
         {
           key: "tab",
-          desc: "окно",
+          desc: tr("окно", "pane"),
           cmd: () => {
             const s = latest.current
             if (s.inner === "menu") return
@@ -188,7 +189,7 @@ export function DownloadScreen(props: ScreenProps) {
         },
       ],
     }),
-    [],
+    [getLanguage()],
   )
 
   async function submit(value: string) {
@@ -200,7 +201,7 @@ export function DownloadScreen(props: ScreenProps) {
     }
     const urls = extractUrls(value)
     if (urls.length === 0) {
-      setStage({ kind: "error", message: "это не похоже на ссылку" })
+      setStage({ kind: "error", message: tr("это не похоже на ссылку", "this does not look like a link") })
       return
     }
     if (urls.length > 1) {
@@ -212,7 +213,10 @@ export function DownloadScreen(props: ScreenProps) {
     const target = urls[0] as string
     const ytdlp = services.tools?.ytdlp
     if (!ytdlp) {
-      setStage({ kind: "error", message: 'yt-dlp не найден. Установи его: pip install -U "yt-dlp[default]"' })
+      setStage({ kind: "error", message: tr(
+          'yt-dlp не найден. Установи его: pip install -U "yt-dlp[default]"',
+          'yt-dlp not found. Install it: pip install -U "yt-dlp[default]"',
+        ), })
       return
     }
     setUrl(hideSchemes(target))
@@ -227,7 +231,7 @@ export function DownloadScreen(props: ScreenProps) {
     })
     if (result.aborted || abort.current !== controller) return
     if (!result.info) {
-      setStage({ kind: "error", message: `не удалось получить информацию: ${hideSchemes(result.error ?? "проверь ссылку")}` })
+      setStage({ kind: "error", message: `${tr("не удалось получить информацию", "could not get the information")}: ${hideSchemes(result.error ?? tr("проверь ссылку", "check the link"))}` })
       return
     }
     setThumbFailed(false)
@@ -273,7 +277,10 @@ export function DownloadScreen(props: ScreenProps) {
       const added = services.queue.add(
         stage.urls.map((u) => ({ url: u, kind: audio ? ("audio" as const) : ("video" as const), source: "download" as const, dir })),
       )
-      services.toast(`в очереди: ${added.length} ${plural(added.length, "ссылка", "ссылки", "ссылок")} · ${audio ? "аудио" : "видео"}`, "ok")
+      services.toast(
+        `${tr("в очереди", "queued")}: ${added.length} ${count(added.length, ["ссылка", "ссылки", "ссылок"], ["link", "links"])} · ${audio ? tr("аудио", "audio") : tr("видео", "video")}`,
+        "ok",
+      )
       started(null, added.map((j) => j.id))
       return
     }
@@ -306,12 +313,12 @@ export function DownloadScreen(props: ScreenProps) {
   if (stage.kind === "loading")
     status = (
       <box flexDirection="column" alignItems="center" flexShrink={0}>
-        <Spinner text="получаю информацию…" />
-        <text fg={theme.faint}>esc — отмена</text>
+        <Spinner text={tr("получаю информацию…", "fetching information…")} />
+        <text fg={theme.faint}>{tr("esc — отмена", "esc — cancel")}</text>
       </box>
     )
   else if (stage.kind === "error") status = <ErrorLine text={stage.message} />
-  else if (stage.kind === "idle" && !clip) status = <text fg={theme.faint} wrapMode="none">{PLATFORMS}</text>
+  else if (stage.kind === "idle" && !clip) status = <text fg={theme.faint} wrapMode="none">{platforms()}</text>
 
   const menu = hasMenu ? (
     <Menu
@@ -330,7 +337,7 @@ export function DownloadScreen(props: ScreenProps) {
 
   const cancelButton = hasCancel ? (
     <FocusButton
-      label="отмена"
+      label={tr("отмена", "cancel")}
       primary
       focused={props.focused && inner === "cancel"}
       onPress={cancelStarted}
@@ -370,7 +377,7 @@ export function DownloadScreen(props: ScreenProps) {
         border
         borderStyle="rounded"
         borderColor={inputFocused ? theme.accent : theme.line}
-        title=" вставь ссылку "
+        title={` ${tr("вставь ссылку", "paste a link")} `}
         titleColor={inputFocused ? theme.accent : theme.muted}
         paddingX={1}
         flexShrink={0}
@@ -416,7 +423,7 @@ export function DownloadScreen(props: ScreenProps) {
           {stage.kind === "many" ? (
             <>
               <text fg={theme.accent}>
-                <b>{`ссылок: ${stage.urls.length}`}</b>
+                <b>{`${tr("ссылок", "links")}: ${stage.urls.length}`}</b>
               </text>
               <text fg={theme.faint} wrapMode="none">
                 {stage.urls.slice(0, 3).map((u) => shortUrl(u, 26)).join(" · ") + (stage.urls.length > 3 ? " · …" : "")}

@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import type { Job, JobKind } from "./queue"
+import { getLanguage, tr } from "./i18n"
 import { configPath } from "./settings"
 
 /** One finished download, one JSON line in the history log. */
@@ -31,7 +32,7 @@ export function entryFromJob(job: Job, now = new Date()): HistoryEntry {
     kind: job.kind,
     height: job.height,
     format: job.kind === "audio" ? job.audioFormat : job.videoFormat,
-    platform: job.label?.platform ?? (job.kind === "audio" ? "аудио" : "видео"),
+    platform: job.label?.platform ?? (job.kind === "audio" ? tr("аудио", "audio") : tr("видео", "video")),
     title: job.label?.title ?? job.url,
     author: job.label?.author ?? null,
     files: job.files,
@@ -117,19 +118,22 @@ export class HistoryStore {
   }
 }
 
-const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+const MONTHS_RU = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+const MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 function dayKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
 export function dayLabel(date: Date, now = new Date()): string {
-  const base = `${date.getDate()} ${MONTHS[date.getMonth()]}`
+  const base =
+    getLanguage() === "en" ? `${MONTHS_EN[date.getMonth()]} ${date.getDate()}` : `${date.getDate()} ${MONTHS_RU[date.getMonth()]}`
   const yesterday = new Date(now)
   yesterday.setDate(now.getDate() - 1)
-  if (dayKey(date) === dayKey(now)) return `сегодня · ${base}`
-  if (dayKey(date) === dayKey(yesterday)) return `вчера · ${base}`
-  return date.getFullYear() === now.getFullYear() ? base : `${base} ${date.getFullYear()}`
+  if (dayKey(date) === dayKey(now)) return `${tr("сегодня", "today")} · ${base}`
+  if (dayKey(date) === dayKey(yesterday)) return `${tr("вчера", "yesterday")} · ${base}`
+  if (date.getFullYear() === now.getFullYear()) return base
+  return getLanguage() === "en" ? `${base}, ${date.getFullYear()}` : `${base} ${date.getFullYear()}`
 }
 
 export function timeLabel(date: Date): string {

@@ -1,6 +1,6 @@
 {
   "name": "fluxware",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Universal media downloader for the terminal, built on yt-dlp and OpenTUI",
   "license": "MIT",
   "type": "module",

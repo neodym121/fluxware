@@ -237,7 +237,8 @@ function TabBar(props: { section: SectionId; focused: boolean; onPick: (id: Sect
         const label = sectionLabel(id)
         const selected = id === props.section
         const badge = id === "history" && active ? ` ${spinner}${active}` : ""
-        const bg = selected ? (props.focused ? theme.accent : theme.selection) : undefined
+        // Same "current" step as buttons: brighter than a selected row, darker than focus.
+        const bg = selected ? (props.focused ? theme.accent : theme.line) : undefined
         const fg = selected ? (props.focused ? "#000000" : theme.accent) : theme.muted
         return (
           <box

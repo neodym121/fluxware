@@ -4,12 +4,30 @@
   "description": "Universal media downloader for the terminal, built on yt-dlp and OpenTUI",
   "license": "MIT",
   "type": "module",
-  "private": true,
   "bin": {
-    "fx": "src/index.tsx"
+    "fx": "bin/fx.cjs"
   },
+  "files": [
+    "bin",
+    "README.md",
+    "README.ru.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neodym121/fluxware.git"
+  },
+  "keywords": [
+    "yt-dlp",
+    "tui",
+    "downloader",
+    "media",
+    "cli"
+  ],
   "scripts": {
     "start": "bun src/index.tsx",
+    "prepublishOnly": "bun test && bun run typecheck",
+    "postinstall": "node bin/install.cjs",
     "dev": "bun --watch src/index.tsx",
     "test": "bun test",
     "typecheck": "tsc --noEmit",

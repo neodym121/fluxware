@@ -19,7 +19,7 @@ type BinPath = {
   cacheBinary: (file: string, version?: string, platform?: string) => string | null
 }
 
-type Layout = { bin?: boolean; pkg?: boolean }
+type Layout = { bin?: boolean; pkg?: boolean; nested?: boolean }
 
 // Mimics a global npm install: node_modules/fluxware/bin plus a sibling
 // node_modules/fluxware-bin-linux-x64, with no postinstall having run.
@@ -31,7 +31,10 @@ function globalInstall(layout: Layout) {
   fs.copyFileSync(path.join(binDir, "bin-path.cjs"), path.join(appBin, "bin-path.cjs"))
   if (layout.bin) fs.writeFileSync(path.join(appBin, "fx-linux-x64"), "")
   if (layout.pkg) {
-    const pkg = path.join(root, "node_modules", "fluxware-bin-linux-x64")
+    const pkg = path.join(
+      layout.nested ? path.join(appBin, "..", "node_modules") : path.join(root, "node_modules"),
+      "fluxware-bin-linux-x64"
+    )
     fs.mkdirSync(pkg, { recursive: true })
     fs.writeFileSync(
       path.join(pkg, "package.json"),
@@ -56,6 +59,13 @@ test("resolves the binary from the optional package when postinstall was blocked
 test("prefers the copy that install.cjs put next to fx.cjs", () => {
   const { appBin, binPath } = globalInstall({ bin: true, pkg: true })
   expect(binPath.resolveBinary("linux", appBin)).toBe(path.join(appBin, "fx-linux-x64"))
+})
+
+test("finds the package npm nested inside the app", () => {
+  const { root, appBin, binPath } = globalInstall({ pkg: true, nested: true })
+  expect(binPath.resolveBinary("linux", appBin)).toBe(
+    path.join(root, "node_modules", "fluxware", "node_modules", "fluxware-bin-linux-x64", "fx-linux-x64")
+  )
 })
 
 test("returns null when no binary is installed", () => {

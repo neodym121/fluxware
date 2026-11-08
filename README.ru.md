@@ -24,17 +24,13 @@ fluxware — интерфейс для управления с клавиату�
 
 ## Установка
 
-fluxware поставляется одним исполняемым файлом `fx.exe`, распаковывать ничего не нужно.
+Нужен [Node.js](https://nodejs.org) — npm входит в его состав.
 
-1. Скачай `fx.exe` из [последнего релиза](../../releases/latest).
-2. Положи его в свою папку, например `C:\Tools\fx`.
-3. Добавь эту папку в `Path`: открой меню «Пуск», найди «Изменение переменных среды для вашей учётной записи», выбери `Path`, нажми **Изменить**, затем **Создать** и впиши папку, например `C:\Tools\fx`. Или выполни в PowerShell со своей папкой:
+```bash
+npm install -g fluxware
+```
 
-   ```powershell
-   [Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";C:\Tools\fx", "User")
-   ```
-
-4. Открой новый терминал и запусти `fx`.
+После этого открой терминал и запусти `fx`. Программа скачается сама в процессе установки. Пока поддерживается только Windows x64; на macOS и Linux можно вместо этого [запустить из исходников](#запуск-из-исходников).
 
 Ещё понадобятся программы из списка ниже. Язык интерфейса выбирается по системе и переключается в настройках.
 
@@ -42,7 +38,7 @@ fluxware поставляется одним исполняемым файлом
 
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp): `pip install -U "yt-dlp[default]"` или `winget install yt-dlp`
 - [ffmpeg](https://ffmpeg.org): `winget install ffmpeg`, нужен для склейки видео и звука, извлечения аудио и обложек
-- [Deno](https://deno.com) или [Node.js](https://nodejs.org), желательно: ими yt-dlp решает JavaScript-задачки YouTube, без них YouTube иногда отдаёт только 360p
+- [Deno](https://deno.com), желательно: им yt-dlp решает JavaScript-задачки YouTube (подойдёт и уже установленный Node.js), без них YouTube иногда отдаёт только 360p
 
 fluxware находит yt-dlp в `PATH` или как Python-модуль `yt_dlp` и при запуске предупреждает, если нет yt-dlp или ffmpeg.
 

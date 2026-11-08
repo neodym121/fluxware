@@ -24,17 +24,13 @@ When YouTube returns only its low-quality fallback format, or a video comes out 
 
 ## Install
 
-fluxware ships as a single executable, `fx.exe`, with nothing else to unpack.
+You need [Node.js](https://nodejs.org) — npm comes with it.
 
-1. Download `fx.exe` from the [latest release](../../releases/latest).
-2. Put it in a folder of your own, for example `C:\Tools\fx`.
-3. Add that folder to `Path`: open the Start menu, search for "Edit environment variables for your account", select `Path`, click **Edit**, then **New**, and enter the folder, for example `C:\Tools\fx`. Or run this in PowerShell, with your own folder:
+```bash
+npm install -g fluxware
+```
 
-   ```powershell
-   [Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";C:\Tools\fx", "User")
-   ```
-
-4. Open a new terminal and run `fx`.
+Then open a terminal and run `fx`. The app downloads itself during installation. Windows x64 only for now; on macOS and Linux you can [run from source](#run-from-source) instead.
 
 You also need the tools below. The interface language follows your system and can be switched in the settings.
 
@@ -42,7 +38,7 @@ You also need the tools below. The interface language follows your system and ca
 
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp): `pip install -U "yt-dlp[default]"` or `winget install yt-dlp`
 - [ffmpeg](https://ffmpeg.org): `winget install ffmpeg`, needed to merge video and audio, extract audio and embed covers
-- [Deno](https://deno.com) or [Node.js](https://nodejs.org), recommended: yt-dlp uses them to solve YouTube's JavaScript challenges, without which YouTube sometimes offers only 360p
+- [Deno](https://deno.com), recommended: yt-dlp uses it (or the Node.js you already installed) to solve YouTube's JavaScript challenges, without which YouTube sometimes offers only 360p
 
 fluxware finds yt-dlp on `PATH` or as the Python module `yt_dlp`, and warns at startup when yt-dlp or ffmpeg is missing.
 

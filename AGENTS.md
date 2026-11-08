@@ -2,7 +2,7 @@
 
 ## Project overview
 
-fluxware is a keyboard-first terminal application for downloading video and audio. It is an interactive interface over yt-dlp, built with React and OpenTUI. The current package version is 1.1.2, and the command exposed by `package.json` is `fx`.
+fluxware is a keyboard-first terminal application for downloading video and audio. It is an interactive interface over yt-dlp, built with React and OpenTUI. The current package version is 1.1.3, and the command exposed by `package.json` is `fx`.
 
 This is a local CLI/TUI application, not a web application or server. It fetches media metadata, offers format and quality choices, runs downloads in a background queue, and keeps optional history. The interface supports English and Russian, keyboard and mouse input, terminal notifications, cover previews, and single-link or batch downloads.
 
@@ -155,7 +155,7 @@ Run `bun run build` when changing packaging, the entry point, dependency bundlin
 
 ## Release and deployment
 
-The distributable is the single compiled `fx.exe` described in both READMEs. Users put it on `PATH` and install yt-dlp and ffmpeg separately; Deno or Node.js is recommended for YouTube. The README links to the repository's latest release. There is no checked-in automated release pipeline, so do not assume that building locally publishes anything.
+The primary distribution is npm: users install with `npm i -g fluxware` (needs Node.js) and run `fx`; the READMEs document exactly that. The GitHub release asset exists to serve the npm `postinstall` download of `fx-win-x64.exe`. Users still install yt-dlp and ffmpeg separately; Deno or Node.js is recommended for YouTube. There is no checked-in automated release pipeline, so do not assume that building locally publishes anything.
 
 The package is also published to npm as `fluxware`. The npm tarball contains only `bin/`, both READMEs, and `LICENSE`: `bin/fx.cjs` is a Node wrapper that launches the prebuilt binary, and the `postinstall` script (`bin/install.cjs`) downloads `fx-win-x64.exe` from the GitHub release matching the package version (`releases/download/v<version>/fx-win-x64.exe`), with retries. Consequences:
 

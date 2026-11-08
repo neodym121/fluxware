@@ -30,7 +30,7 @@ You need [Node.js](https://nodejs.org) — npm comes with it.
 npm install -g fluxware
 ```
 
-Then open a terminal and run `fx`. The app downloads itself during installation. Windows x64 only for now; on macOS and Linux you can [run from source](#run-from-source) instead.
+Then open a terminal and run `fx`. The app downloads itself during installation. Windows x64 and Linux x64 are supported; on macOS you can [run from source](#run-from-source) instead.
 
 You also need the tools below. The interface language follows your system and can be switched in the settings.
 

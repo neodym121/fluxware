@@ -1,7 +1,7 @@
 node_modules/
 dist/
 *.log
-npm-bin/fx-win-x64.exe
+npm-bin/*/fx-*
 
 # The old Python version stays local only.
 fluxware_new_.py

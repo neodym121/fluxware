@@ -1,21 +1,25 @@
-// Provides the prebuilt fluxware binary: prefers the fluxware-bin npm package,
-// falls back to downloading from GitHub Releases.
+// Provides the prebuilt fluxware binary: prefers the platform-specific
+// fluxware-bin-* npm package, falls back to downloading from GitHub Releases.
 const fs = require("fs")
 const path = require("path")
 const https = require("https")
-const { platform, arch } = process
 
 const REPO = "neodym121/fluxware"
+
+const TARGETS = {
+  "win32-x64": { pkg: "fluxware-bin-win-x64", file: "fx-win-x64.exe" },
+  "linux-x64": { pkg: "fluxware-bin-linux-x64", file: "fx-linux-x64" },
+}
 
 function fail(message) {
   console.error(`fluxware: ${message}`)
   process.exit(1)
 }
 
-function copyLocalBinary(dest) {
+function copyLocalBinary(target, dest) {
   try {
-    const manifest = require.resolve("fluxware-bin/package.json")
-    const candidate = path.join(path.dirname(manifest), "fx-win-x64.exe")
+    const manifest = require.resolve(`${target.pkg}/package.json`)
+    const candidate = path.join(path.dirname(manifest), target.file)
     if (!fs.existsSync(candidate)) return false
     fs.copyFileSync(candidate, dest)
     return true
@@ -69,19 +73,23 @@ function download(url, dest, attempt) {
 }
 
 function main() {
-  if (platform !== "win32" || arch !== "x64") {
-    console.error("fluxware: пока доступна только сборка win32-x64. Прочие платформы: см. README.")
+  const target = TARGETS[`${process.platform}-${process.arch}`]
+  if (!target) {
+    console.error("fluxware: сборки пока есть только для win32-x64 и linux-x64. Прочие платформы: см. README.")
     process.exit(0)
   }
   // Development checkout: binary comes from `bun run build`, nothing to download.
   if (fs.existsSync(path.join(__dirname, "..", "src", "index.tsx"))) process.exit(0)
   const { version } = require("../package.json")
-  const dest = path.join(__dirname, "fx-win-x64.exe")
+  const dest = path.join(__dirname, target.file)
   if (fs.existsSync(dest)) process.exit(0)
   console.log(`fluxware: установка бинарника v${version}...`)
-  if (copyLocalBinary(dest)) process.exit(0)
+  if (copyLocalBinary(target, dest)) {
+    fs.chmodSync(dest, 0o755)
+    process.exit(0)
+  }
   console.log("fluxware: бинарник не найден в npm, скачивание с GitHub...")
-  const url = `https://github.com/${REPO}/releases/download/v${version}/fx-win-x64.exe`
+  const url = `https://github.com/${REPO}/releases/download/v${version}/${target.file}`
   download(url, dest, 1)
 }
 

@@ -1,0 +1,19 @@
+{
+  "name": "fluxware-bin-linux-x64",
+  "version": "1.1.5",
+  "description": "Prebuilt Linux x64 binary for fluxware (fx-linux-x64)",
+  "license": "MIT",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neodym121/fluxware.git"
+  },
+  "files": [
+    "fx-linux-x64"
+  ]
+}

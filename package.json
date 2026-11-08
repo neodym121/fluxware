@@ -1,6 +1,6 @@
 {
   "name": "fluxware",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Universal media downloader for the terminal, built on yt-dlp and OpenTUI",
   "license": "MIT",
   "type": "module",
@@ -31,18 +31,24 @@
     "dev": "bun --watch src/index.tsx",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "build": "bun build --compile --minify src/index.tsx --outfile dist/fx"
+    "build": "bun build --compile --minify src/index.tsx --outfile dist/fx",
+    "build:linux": "bun build --compile --minify --target=bun-linux-x64 src/index.tsx --outfile dist/fx-linux-x64"
   },
-  "dependencies": {
-    "fluxware-bin": "1.1.3"
+  "optionalDependencies": {
+    "fluxware-bin-win-x64": "1.1.5",
+    "fluxware-bin-linux-x64": "1.1.5"
   },
   "devDependencies": {
     "@opentui/core": "0.7.0",
+    "@opentui/core-linux-arm64": "0.7.0",
+    "@opentui/core-linux-arm64-musl": "0.7.0",
+    "@opentui/core-linux-x64": "0.7.0",
+    "@opentui/core-linux-x64-musl": "0.7.0",
     "@opentui/keymap": "0.7.0",
     "@opentui/react": "0.7.0",
-    "react": "19",
     "@types/bun": "^1.4.4",
     "@types/react": "^19.3.0",
+    "react": "19",
     "typescript": "^7.0.2"
   }
 }

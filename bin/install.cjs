@@ -1,4 +1,5 @@
-// Downloads the prebuilt fluxware binary for this platform from GitHub Releases.
+// Provides the prebuilt fluxware binary: prefers the fluxware-bin npm package,
+// falls back to downloading from GitHub Releases.
 const fs = require("fs")
 const path = require("path")
 const https = require("https")
@@ -9,6 +10,18 @@ const REPO = "neodym121/fluxware"
 function fail(message) {
   console.error(`fluxware: ${message}`)
   process.exit(1)
+}
+
+function copyLocalBinary(dest) {
+  try {
+    const manifest = require.resolve("fluxware-bin/package.json")
+    const candidate = path.join(path.dirname(manifest), "fx-win-x64.exe")
+    if (!fs.existsSync(candidate)) return false
+    fs.copyFileSync(candidate, dest)
+    return true
+  } catch {
+    return false
+  }
 }
 
 function downloadOnce(url, dest, redirectsLeft, onDone) {
@@ -65,8 +78,10 @@ function main() {
   const { version } = require("../package.json")
   const dest = path.join(__dirname, "fx-win-x64.exe")
   if (fs.existsSync(dest)) process.exit(0)
+  console.log(`fluxware: установка бинарника v${version}...`)
+  if (copyLocalBinary(dest)) process.exit(0)
+  console.log("fluxware: бинарник не найден в npm, скачивание с GitHub...")
   const url = `https://github.com/${REPO}/releases/download/v${version}/fx-win-x64.exe`
-  console.log(`fluxware: скачивание бинарника v${version}...`)
   download(url, dest, 1)
 }
 

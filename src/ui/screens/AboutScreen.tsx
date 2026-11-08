@@ -58,7 +58,7 @@ export function AboutScreen(props: ScreenProps) {
         <Field label={tr("js для yt-dlp", "js for yt-dlp")} width={14}>
           {tools === null ? checking : tools.jsRuntimes.length ? tools.jsRuntimes.join(", ") : tr("нет (deno или node)", "none (deno or node)")}
         </Field>
-        <Field label={tr("интерфейс", "interface")} width={14}>{`OpenTUI ${pkg.dependencies["@opentui/core"]} · Bun ${Bun.version}`}</Field>
+        <Field label={tr("интерфейс", "interface")} width={14}>{`OpenTUI ${pkg.devDependencies["@opentui/core"]} · Bun ${Bun.version}`}</Field>
       </box>
       {tools && !tools.ytdlp ? (
         <text fg={theme.muted} wrapMode="word" marginTop={1}>

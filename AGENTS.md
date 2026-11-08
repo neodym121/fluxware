@@ -2,7 +2,7 @@
 
 ## Project overview
 
-fluxware is a keyboard-first terminal application for downloading video and audio. It is an interactive interface over yt-dlp, built with React and OpenTUI. The current package version is 1.1.3, and the command exposed by `package.json` is `fx`.
+fluxware is a keyboard-first terminal application for downloading video and audio. It is an interactive interface over yt-dlp, built with React and OpenTUI. The current package version is 1.1.4, and the command exposed by `package.json` is `fx`.
 
 This is a local CLI/TUI application, not a web application or server. It fetches media metadata, offers format and quality choices, runs downloads in a background queue, and keeps optional history. The interface supports English and Russian, keyboard and mouse input, terminal notifications, cover previews, and single-link or batch downloads.
 
@@ -157,9 +157,10 @@ Run `bun run build` when changing packaging, the entry point, dependency bundlin
 
 The primary distribution is npm: users install with `npm i -g fluxware` (needs Node.js) and run `fx`; the READMEs document exactly that. The GitHub release asset exists to serve the npm `postinstall` download of `fx-win-x64.exe`. Users still install yt-dlp and ffmpeg separately; Deno or Node.js is recommended for YouTube. There is no checked-in automated release pipeline, so do not assume that building locally publishes anything.
 
-The package is also published to npm as `fluxware`. The npm tarball contains only `bin/`, both READMEs, and `LICENSE`: `bin/fx.cjs` is a Node wrapper that launches the prebuilt binary, and the `postinstall` script (`bin/install.cjs`) downloads `fx-win-x64.exe` from the GitHub release matching the package version (`releases/download/v<version>/fx-win-x64.exe`), with retries. Consequences:
+The package is also published to npm as `fluxware`. The npm tarball contains only `bin/`, both READMEs, and `LICENSE`: `bin/fx.cjs` is a Node wrapper that launches the prebuilt binary, and the `postinstall` script (`bin/install.cjs`) provides `fx-win-x64.exe`. It prefers the `fluxware-bin` npm package (an exact-version dependency that ships the binary through the npm registry, so installs do not depend on GitHub connectivity) and falls back to downloading from the GitHub release `v<version>` with retries. OpenTUI and React are devDependencies; they are build-time only and must not move back into `dependencies`. Consequences:
 
-- Every version bump must be accompanied by a GitHub release with the `fx-win-x64.exe` asset under the matching `v<version>` tag, created before or together with `npm publish`, or fresh installs will fail to fetch the binary.
+- Every release publishes two npm packages in order: first `npm-bin/` as `fluxware-bin` (copy `dist/fx-win-x64.exe` into it, same version), then `fluxware` itself with the matching version bump.
+- Keep the GitHub release with the `fx-win-x64.exe` asset under the matching `v<version>` tag as the postinstall fallback and for direct downloaders.
 - npm accepts only granular access tokens; classic tokens were removed. Publishing requires a granular token with "Read and write (publish and stage)" and the "Bypass 2FA" option, because the maintainer account uses security-key 2FA, which cannot produce OTP codes for the CLI.
 
 `dist/`, dependencies, logs, user configuration, and downloaded media are not source artifacts and should not be committed.

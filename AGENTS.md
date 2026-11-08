@@ -2,7 +2,7 @@
 
 ## Project overview
 
-fluxware is a keyboard-first terminal application for downloading video and audio. It is an interactive interface over yt-dlp, built with React and OpenTUI. The current package version is 1.1.5, and the command exposed by `package.json` is `fx`.
+fluxware is a keyboard-first terminal application for downloading video and audio. It is an interactive interface over yt-dlp, built with React and OpenTUI. The current package version is 1.1.6, and the command exposed by `package.json` is `fx`.
 
 This is a local CLI/TUI application, not a web application or server. It fetches media metadata, offers format and quality choices, runs downloads in a background queue, and keeps optional history. The interface supports English and Russian, keyboard and mouse input, terminal notifications, cover previews, and single-link or batch downloads.
 

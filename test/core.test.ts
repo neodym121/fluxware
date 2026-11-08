@@ -11,6 +11,7 @@ import { INTRO_KINDS, createIntro, nextIntro } from "../src/core/intro"
 import { leftoverCandidates, removeLeftovers } from "../src/core/cleanup"
 import { extractUrls, hideSchemes, isSoundCloudUrl, isYoutubeUrl } from "../src/core/urls"
 import { audioArgs, cleanError, downloadArgs, parseLine, splitArgs, videoFormatSelector } from "../src/core/ytdlp"
+import { installYtdlp, managedYtdlpPath, ytdlpAssets } from "../src/core/ytdlp-bootstrap"
 
 setLanguage("ru")
 
@@ -404,5 +405,81 @@ describe("cleanup after cancel", () => {
     // The name is JSON, so its backslashes arrive doubled and a "|" in it does not split fields.
     const line = `FLUXPROG downloading|1|2|NA|NA|NA|NA|NA|avc1|none|${JSON.stringify("C:\\V\\a|b.mp4")}`
     expect(parseLine(line)).toMatchObject({ type: "progress", file: "C:\\V\\a|b.mp4" })
+  })
+})
+
+describe("yt-dlp bootstrap", () => {
+  const scratch = () => mkdtempSync(join(tmpdir(), "fluxware-ytdlp-"))
+
+  test("keeps its own yt-dlp in the data directory of the platform", () => {
+    const local = join("C:\local", "fluxware", "bin", "yt-dlp.exe")
+    expect(managedYtdlpPath({ LOCALAPPDATA: "C:\local" }, "win32", "C:\home")).toBe(local)
+    expect(managedYtdlpPath({}, "linux", "/home/me")).toBe(join("/home/me", ".local", "share", "fluxware", "bin", "yt-dlp"))
+    expect(managedYtdlpPath({ XDG_DATA_HOME: "/data" }, "linux", "/home/me")).toBe(join("/data", "fluxware", "bin", "yt-dlp"))
+    expect(managedYtdlpPath({}, "darwin", "/Users/me")).toBe(
+      join("/Users/me", "Library", "Application Support", "fluxware", "bin", "yt-dlp"),
+    )
+  })
+
+  test("picks the standalone build for the platform, the libc and the architecture", () => {
+    expect(ytdlpAssets("linux", "x64", false)).toEqual(["yt-dlp_linux", "yt-dlp_musllinux"])
+    expect(ytdlpAssets("linux", "x64", true)).toEqual(["yt-dlp_musllinux"])
+    expect(ytdlpAssets("linux", "arm64", false)[0]).toBe("yt-dlp_linux_aarch64")
+    expect(ytdlpAssets("linux", "arm", false)).toEqual([])
+    expect(ytdlpAssets("win32", "x64", false)).toEqual(["yt-dlp.exe"])
+    expect(ytdlpAssets("win32", "ia32", false)).toEqual(["yt-dlp_x86.exe"])
+    expect(ytdlpAssets("darwin", "arm64", false)).toEqual(["yt-dlp_macos"])
+    expect(ytdlpAssets("freebsd", "x64", false)).toEqual([])
+  })
+
+  test("downloads a build, checks that it runs and keeps only the binary", async () => {
+    const root = scratch()
+    const target = join(root, "bin", "yt-dlp")
+    const statuses: string[] = []
+    const result = await installYtdlp({
+      target,
+      assets: ["yt-dlp_linux"],
+      onStatus: (message) => statuses.push(message),
+      fetchBytes: async (_url, onProgress) => {
+        onProgress(1)
+        return new Uint8Array([104, 105])
+      },
+      verify: async (file) => (readFileSync(file).length === 2 ? "2026.10.26" : null),
+    })
+    expect(result).toEqual({ ok: true, version: "2026.10.26", error: null })
+    expect(readFileSync(target).length).toBe(2)
+    expect(readdirSync(join(root, "bin"))).toEqual(["yt-dlp"])
+    expect(statuses.some((message) => message.includes("yt-dlp_linux"))).toBe(true)
+  })
+
+  test("retries with the next asset when the build does not start", async () => {
+    const target = join(scratch(), "yt-dlp")
+    const seen: string[] = []
+    const result = await installYtdlp({
+      target,
+      assets: ["yt-dlp_linux", "yt-dlp_musllinux"],
+      fetchBytes: async (url) => {
+        seen.push(url.split("/").pop() ?? "")
+        return new Uint8Array([1])
+      },
+      verify: async () => (seen.length === 2 ? "2026.10.26" : null),
+    })
+    expect(seen).toEqual(["yt-dlp_linux", "yt-dlp_musllinux"])
+    expect(result.ok).toBe(true)
+  })
+
+  test("reports the last error and leaves nothing behind", async () => {
+    const root = scratch()
+    const result = await installYtdlp({
+      target: join(root, "yt-dlp"),
+      assets: ["yt-dlp_linux"],
+      fetchBytes: async () => {
+        throw new Error("HTTP 404")
+      },
+      verify: async () => null,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.error).toBe("HTTP 404")
+    expect(readdirSync(root)).toEqual([])
   })
 })

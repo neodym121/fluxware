@@ -2,7 +2,7 @@
 
 ## Project overview
 
-fluxware is a keyboard-first terminal application for downloading video and audio. It is an interactive interface over yt-dlp, built with React and OpenTUI. The current package version is 1.1.7, and the command exposed by `package.json` is `fx`.
+fluxware is a keyboard-first terminal application for downloading video and audio. It is an interactive interface over yt-dlp, built with React and OpenTUI. The current package version is 1.1.8, and the command exposed by `package.json` is `fx`.
 
 This is a local CLI/TUI application, not a web application or server. It fetches media metadata, offers format and quality choices, runs downloads in a background queue, and keeps optional history. The interface supports English and Russian, keyboard and mouse input, terminal notifications, cover previews, and single-link or batch downloads.
 
@@ -58,7 +58,7 @@ The build script is `bun build --compile --minify src/index.tsx --outfile dist/f
 
 ### Composition root
 
-`src/index.tsx` creates the long-lived application services: `SettingsStore`, `DownloadQueue`, `HistoryStore`, the OpenTUI renderer, keymap, clipboard service, and logo-intro state. It detects external tools asynchronously, injects services into React through `ServicesProvider`, and owns shutdown.
+`src/index.tsx` creates the long-lived application services: `SettingsStore`, `DownloadQueue`, `HistoryStore`, the OpenTUI renderer, keymap, clipboard service, and logo-intro state. It detects external tools asynchronously and, when yt-dlp is nowhere to be found, downloads the standalone build while showing the progress in the status line. It injects services into React through `ServicesProvider` and owns shutdown.
 
 Shutdown cancels active jobs, briefly waits for cancellation cleanup, kills remaining child processes, disposes the clipboard, and restores the terminal. While downloads are active, the UI requires a second quit request before calling this path.
 
@@ -78,7 +78,8 @@ Batch mode extracts links from arbitrary text or a UTF-8/Windows-1251 text file 
 
 These modules contain application logic without React or OpenTUI rendering dependencies:
 
-- `ytdlp.ts`: tool detection, custom-option parsing and validation, metadata retrieval, format selectors, yt-dlp arguments, and output-event parsing. yt-dlp is found on `PATH` first, then through Python, Python 3, or the Windows `py` launcher.
+- `ytdlp.ts`: tool detection, custom-option parsing and validation, metadata retrieval, format selectors, yt-dlp arguments, and output-event parsing. yt-dlp is found on `PATH` first, then through Python, Python 3, or the Windows `py` launcher, then as the standalone build fluxware downloaded itself.
+- `ytdlp-bootstrap.ts`: paths and download of that standalone build. The release asset is chosen by platform, architecture and musl libc; the file is downloaded under a temporary name, checked with `--version` and only then renamed into place, so a build for the wrong libc is retried with the next asset instead of being left broken.
 - `queue.ts`: in-memory job state machine (`queued`, `running`, `done`, `failed`, `canceled`), concurrency, throttled subscriptions, run summaries, retries, cancellation, and idle/finish events. Concurrency is normalized to 1 through 4.
 - `process.ts`: child-process execution, UTF-8 Python environments, line splitting, timeouts, Windows process-tree termination with `taskkill`, and platform-specific file-manager integration.
 - `media.ts`: typed subsets of yt-dlp metadata, media-card data, available heights, platform labels, fallback-format detection, and quality-drop warnings.

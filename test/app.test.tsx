@@ -40,7 +40,14 @@ function fakeClipboard(text: string): HostClipboardService {
 }
 
 async function mount(
-  options: { tools?: Tools | null; section?: SectionId; width?: number; height?: number; clipboardText?: string } = {},
+  options: {
+    tools?: Tools | null
+    toolStatus?: string | null
+    section?: SectionId
+    width?: number
+    height?: number
+    clipboardText?: string
+  } = {},
 ) {
   ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
   const dir = mkdtempSync(join(tmpdir(), "fluxware-ui-"))
@@ -59,6 +66,7 @@ async function mount(
     queue,
     history,
     tools,
+    toolStatus: options.toolStatus ?? null,
     intro: null,
     nextIntro: () => "drop",
     clipboard: options.clipboardText ? fakeClipboard(options.clipboardText) : null,

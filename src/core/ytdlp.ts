@@ -10,6 +10,8 @@ export interface YtDlpCommand {
   /** Arguments before yt-dlp's own, such as ["-m", "yt_dlp"] for Python. */
   prefix: string[]
   version: string
+  /** The standalone build fluxware downloaded itself. */
+  managed?: boolean
 }
 
 export interface Tools {
@@ -21,18 +23,27 @@ export interface Tools {
 
 type Which = (name: string) => string | null
 
+export interface DetectOptions {
+  which?: Which
+  /** Standalone yt-dlp fluxware downloaded itself, checked last. */
+  managed?: string | null
+}
+
 /**
- * Finds yt-dlp: the executable on PATH first, then the Python module. The
- * Python version imported yt_dlp, so its users often have only the module.
+ * Finds yt-dlp: the executable on PATH first, then the Python module, then the
+ * standalone build fluxware downloaded. The Python version imported yt_dlp, so
+ * its users often have only the module.
  */
-export async function detectTools(which: Which = (name) => Bun.which(name)): Promise<Tools> {
-  const candidates: { command: string; prefix: string[] }[] = []
+export async function detectTools(options: DetectOptions = {}): Promise<Tools> {
+  const which = options.which ?? ((name) => Bun.which(name))
+  const candidates: { command: string; prefix: string[]; managed?: boolean }[] = []
   const exe = which("yt-dlp")
   if (exe) candidates.push({ command: exe, prefix: [] })
   for (const python of ["python", "python3", "py"]) {
     const path = which(python)
     if (path) candidates.push({ command: path, prefix: ["-m", "yt_dlp"] })
   }
+  if (options.managed) candidates.push({ command: options.managed, prefix: [], managed: true })
 
   let ytdlp: YtDlpCommand | null = null
   for (const candidate of candidates) {

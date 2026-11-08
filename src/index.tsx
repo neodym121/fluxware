@@ -5,6 +5,7 @@ import { createDefaultOpenTuiKeymap } from "@opentui/keymap/opentui"
 import { KeymapProvider } from "@opentui/keymap/react"
 import { createRoot } from "@opentui/react"
 import { useEffect, useMemo, useState } from "react"
+import { existsSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { HistoryStore, entryFromJob, historyPath } from "./core/history"
 import { tr } from "./core/i18n"
@@ -13,6 +14,7 @@ import { killAllChildren } from "./core/process"
 import { DownloadQueue } from "./core/queue"
 import { SettingsStore } from "./core/settings"
 import { detectTools, type Tools } from "./core/ytdlp"
+import { installYtdlp, managedYtdlpPath } from "./core/ytdlp-bootstrap"
 import { App } from "./ui/App"
 import { ServicesProvider, useToasts, type AppServices } from "./ui/context"
 
@@ -80,19 +82,45 @@ renderer.once("destroy", () => {
 function Root() {
   const { toast, show } = useToasts()
   const [detected, setDetected] = useState<Tools | null>(null)
+  const [toolStatus, setToolStatus] = useState<string | null>(null)
 
   useEffect(() => {
-    void detectTools().then((found) => {
+    let cancelled = false
+    const finish = (found: Tools) => {
       tools = found
+      if (cancelled) return
       setDetected(found)
-    })
+      setToolStatus(null)
+    }
+
+    void (async () => {
+      const managed = managedYtdlpPath()
+      const found = await detectTools({ managed: existsSync(managed) ? managed : null })
+      if (found.ytdlp || cancelled) return finish(found)
+
+      // Nothing on PATH and no Python module: fetch yt-dlp's standalone build,
+      // which needs no Python at all.
+      const result = await installYtdlp({ target: managed, onStatus: setToolStatus })
+      if (cancelled) return
+      if (!result.ok) {
+        finish(found)
+        show(`${tr("не удалось скачать yt-dlp", "could not download yt-dlp")}: ${result.error ?? ""}`, "error")
+        return
+      }
+      finish(await detectTools({ managed }))
+      show(tr(`yt-dlp ${result.version} скачан в ${managed}`, `yt-dlp ${result.version} downloaded to ${managed}`), "ok")
+    })()
+
     if (settings.loadError) show(settings.loadError, "error")
     else if (settings.migrated) show(tr("настройки перенесены из Python-версии fluxware", "settings carried over from the Python version of fluxware"), "ok")
+    return () => {
+      cancelled = true
+    }
   }, [show])
 
   const services = useMemo<AppServices>(
-    () => ({ settings, queue, history, tools: detected, intro, nextIntro: advanceIntro, clipboard, toast: show, quit: () => void shutdown() }),
-    [detected, show],
+    () => ({ settings, queue, history, tools: detected, toolStatus, intro, nextIntro: advanceIntro, clipboard, toast: show, quit: () => void shutdown() }),
+    [detected, toolStatus, show],
   )
 
   return (

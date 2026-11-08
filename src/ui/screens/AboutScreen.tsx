@@ -31,7 +31,7 @@ export function AboutScreen(props: ScreenProps) {
     tools === null
       ? checking
       : tools.ytdlp
-        ? `${tools.ytdlp.version}${tools.ytdlp.prefix.length ? tr(" (модуль Python)", " (Python module)") : ""}`
+        ? `${tools.ytdlp.version}${tools.ytdlp.prefix.length ? tr(" (модуль Python)", " (Python module)") : tools.ytdlp.managed ? tr(" (скачан fluxware)", " (downloaded by fluxware)") : ""}`
         : notFound
   const ffmpegLine = tools === null ? checking : tools.ffmpeg ? ffmpeg ?? tr("найден", "found") : notFound
 

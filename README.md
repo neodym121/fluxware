@@ -40,15 +40,14 @@ The binary travels inside the package, so there is nothing to download after the
 node "$(npm root -g)/fluxware/bin/install.cjs"
 ```
 
-You also need the tools below. The interface language follows your system and can be switched in the settings.
+You also need ffmpeg, see below. The interface language follows your system and can be switched in the settings.
 
 ## Requirements
 
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp): `pip install -U "yt-dlp[default]"` or `winget install yt-dlp`
 - [ffmpeg](https://ffmpeg.org): `winget install ffmpeg`, needed to merge video and audio, extract audio and embed covers
 - [Deno](https://deno.com), recommended: yt-dlp uses it (or the Node.js you already installed) to solve YouTube's JavaScript challenges, without which YouTube sometimes offers only 360p
 
-fluxware finds yt-dlp on `PATH` or as the Python module `yt_dlp`, and warns at startup when yt-dlp or ffmpeg is missing.
+yt-dlp comes with fluxware: you do not install it anywhere and Python is not needed. fluxware looks for `yt-dlp` on `PATH`, then for the Python module `yt_dlp`, and otherwise downloads yt-dlp's own standalone build on the first launch (17 MB on Windows, 41 MB on Linux), showing the progress in the status line. The build lives in `%LOCALAPPDATA%\fluxware\bin` on Windows, `~/Library/Application Support/fluxware/bin` on macOS and `~/.local/share/fluxware/bin` on Linux, and is reused from then on.
 
 ## Run from source
 
@@ -77,6 +76,8 @@ The bottom line always shows the keys that work right now. The mouse works too.
 ## Files
 
 Settings, the history log and a small state file live in `%APPDATA%\fluxware` on Windows, `~/Library/Application Support/fluxware` on macOS and `~/.config/fluxware` on Linux. Settings of the earlier Python version are carried over on the first launch.
+
+The yt-dlp build fluxware downloaded for itself is kept apart: `%LOCALAPPDATA%\fluxware\bin`, `~/Library/Application Support/fluxware/bin` or `~/.local/share/fluxware/bin`. Delete that file to have it fetched again.
 
 ## License
 

@@ -40,15 +40,14 @@ npm install -g fluxware
 node "$(npm root -g)/fluxware/bin/install.cjs"
 ```
 
-Ещё понадобятся программы из списка ниже. Язык интерфейса выбирается по системе и переключается в настройках.
+Ещё понадобится ffmpeg, см. ниже. Язык интерфейса выбирается по системе и переключается в настройках.
 
 ## Что нужно
 
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp): `pip install -U "yt-dlp[default]"` или `winget install yt-dlp`
 - [ffmpeg](https://ffmpeg.org): `winget install ffmpeg`, нужен для склейки видео и звука, извлечения аудио и обложек
 - [Deno](https://deno.com), желательно: им yt-dlp решает JavaScript-задачки YouTube (подойдёт и уже установленный Node.js), без них YouTube иногда отдаёт только 360p
 
-fluxware находит yt-dlp в `PATH` или как Python-модуль `yt_dlp` и при запуске предупреждает, если нет yt-dlp или ffmpeg.
+yt-dlp идёт в комплекте: ставить его никуда не надо, Python не нужен. fluxware ищет `yt-dlp` в `PATH`, затем Python-модуль `yt_dlp`, а если нет ничего — при первом запуске скачивает отдельную сборку yt-dlp (17 МБ на Windows, 41 МБ на Linux) и показывает прогресс в строке состояния. Сборка лежит в `%LOCALAPPDATA%\fluxware\bin` на Windows, `~/Library/Application Support/fluxware/bin` на macOS и `~/.local/share/fluxware/bin` на Linux, и дальше используется она.
 
 ## Запуск из исходников
 
@@ -77,6 +76,8 @@ bun start
 ## Файлы
 
 Настройки, лог истории и небольшой файл состояния лежат в `%APPDATA%\fluxware` на Windows, в `~/Library/Application Support/fluxware` на macOS и в `~/.config/fluxware` на Linux. Настройки прежней Python-версии переносятся при первом запуске.
+
+Скачанный fluxware бинарник yt-dlp хранится отдельно: `%LOCALAPPDATA%\fluxware\bin`, `~/Library/Application Support/fluxware/bin` или `~/.local/share/fluxware/bin`. Удалите этот файл, чтобы fluxware скачал его заново.
 
 ## Лицензия
 

@@ -124,7 +124,8 @@ function ToastLine(props: { toast: Toast; width: number }) {
 }
 
 function ToolVersions() {
-  const { tools } = useServices()
+  const { tools, toolStatus } = useServices()
+  if (toolStatus) return <span fg={theme.accent}>{toolStatus}</span>
   if (tools === null) return <span fg={theme.faint}>{tr("проверяю yt-dlp…", "checking yt-dlp…")}</span>
   return tools.ytdlp ? <span fg={theme.faint}>{`yt-dlp ${tools.ytdlp.version}`}</span> : <span fg={theme.error}>{tr("yt-dlp не найден", "yt-dlp not found")}</span>
 }
@@ -355,8 +356,11 @@ export function App(props: { toast: Toast | null; initialSection?: SectionId }) 
     noticeShown.current = true
     const lines: string[] = []
     if (!tools.ytdlp) lines.push(
-        tr("yt-dlp не найден: без него fluxware ничего не скачает.", "yt-dlp not found: fluxware cannot download anything without it."),
-        `${tr("установка", "install")}: ${ytdlpInstallHint()}`,
+        tr(
+          "yt-dlp не найден и скачать его не удалось: без него fluxware ничего не скачает. Проверьте интернет и перезапустите fluxware.",
+          "yt-dlp was not found and could not be downloaded: fluxware cannot download anything without it. Check the connection and restart fluxware.",
+        ),
+        `${tr("или поставьте вручную", "or install it yourself")}: ${ytdlpInstallHint()}`,
       )
     if (!tools.ffmpeg)
       lines.push(

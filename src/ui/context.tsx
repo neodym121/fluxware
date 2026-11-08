@@ -21,6 +21,8 @@ export interface AppServices {
   history: HistoryStore
   /** null while detection runs at startup. */
   tools: Tools | null
+  /** Progress text while fluxware downloads yt-dlp for itself. */
+  toolStatus: string | null
   /** Logo animation of this launch, or null for a still logo. */
   intro: IntroKind | null
   /** Moves to the next logo animation, for a click on the logo. */

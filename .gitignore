@@ -3,5 +3,8 @@ dist/
 *.log
 npm-bin/*/fx-*
 
+# The test suite stays on the maintainer's disk only.
+test/
+
 # The old Python version stays local only.
 fluxware_new_.py

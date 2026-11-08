@@ -136,6 +136,8 @@ Default download folders are `~/Videos` and `~/Music`. Null directory settings m
 
 ## Testing instructions
 
+The `test/` folder is ignored by Git and lives only on the maintainer's disk, so a fresh clone has no tests and `bun test` finds nothing there; the files stay reachable in history (`git checkout <commit> -- test`).
+
 The project uses Bun's built-in `bun:test` runner. Tests do not contact real media sites or require a real yt-dlp installation.
 
 - `test/core.test.ts`: unit tests for URL extraction, formatting, labels, quality warnings, yt-dlp argument construction and parsing, settings and migration, localization, history grouping, logo animation, and cancellation cleanup.

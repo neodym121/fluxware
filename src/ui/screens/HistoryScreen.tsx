@@ -21,12 +21,12 @@ function EntryRow(props: { entry: HistoryEntry; selected: boolean }) {
   const { entry } = props
   return (
     <box flexDirection="row" height={1} flexShrink={0} backgroundColor={props.selected ? theme.selection : undefined}>
-      <text wrapMode="none" flexGrow={1} flexShrink={1}>
+      <text selectable={false} wrapMode="none" flexGrow={1} flexShrink={1}>
         <span fg={theme.faint}>{`[${entry.platform}] `}</span>
         <span fg={props.selected ? theme.accent : theme.text}>{entry.title}</span>
         {entry.author ? <span fg={theme.muted}>{` — ${entry.author}`}</span> : null}
       </text>
-      <text fg={theme.faint} flexShrink={0}>
+      <text selectable={false} fg={theme.faint} flexShrink={0}>
         {"  " + timeLabel(new Date(entry.time))}
       </text>
     </box>
@@ -147,7 +147,7 @@ export function HistoryScreen(props: ScreenProps) {
   return (
     <box flexDirection="column" flexGrow={1}>
       {!settings.history ? (
-        <text fg={theme.faint} wrapMode="none">
+        <text selectable={false} fg={theme.faint} wrapMode="none">
           {tr(
             "история не сохраняется: включи её в настройках. сейчас видны только загрузки этого запуска",
             "history is not saved: turn it on in the settings. only downloads of this session are shown",
@@ -162,7 +162,7 @@ export function HistoryScreen(props: ScreenProps) {
         onMouseDown={props.onFocusRequest}
       >
         {rows.length === 0 ? (
-          <text fg={theme.faint} wrapMode="word">
+          <text selectable={false} fg={theme.faint} wrapMode="word">
             {tr(
               "история пуста. всё, что скачается в разделах «скачка» и «пакет», появится здесь с датой и временем.",
               "the history is empty. everything downloaded in the \"download\" and \"batch\" sections will appear here with the date and time.",
@@ -172,7 +172,7 @@ export function HistoryScreen(props: ScreenProps) {
           rows.map((row, i) => {
             if (row.kind === "header") {
               return (
-                <text key={row.key} id={`row-${row.key}`} fg={theme.muted} marginTop={i === 0 ? 0 : 1} flexShrink={0}>
+                <text selectable={false} key={row.key} id={`row-${row.key}`} fg={theme.muted} marginTop={i === 0 ? 0 : 1} flexShrink={0}>
                   {row.label}
                 </text>
               )
@@ -197,7 +197,7 @@ export function HistoryScreen(props: ScreenProps) {
         )}
       </scrollbox>
       {missing ? (
-        <text fg={theme.error} wrapMode="none" flexShrink={0}>
+        <text selectable={false} fg={theme.error} wrapMode="none" flexShrink={0}>
           {"✗ " + missing}
         </text>
       ) : null}

@@ -265,7 +265,7 @@ export function SettingsScreen(props: ScreenProps) {
       />
       {editing ? (
         <box flexDirection="column" marginTop={1} flexShrink={0}>
-          <text fg={theme.muted}>
+          <text selectable={false} fg={theme.muted}>
             {editing === "ytdlpArgs"
               ? tr("параметры yt-dlp · пусто — очистить", "yt-dlp options · empty — clear")
               : tr("путь до папки · пусто — папка по умолчанию", "folder path · empty — default folder")}
@@ -283,8 +283,8 @@ export function SettingsScreen(props: ScreenProps) {
           {checking ? <Spinner text={tr("проверяю параметры…", "checking options…")} /> : null}
           {confirmCreate ? (
             <box flexDirection="column" flexShrink={0}>
-              <text fg={theme.warn} wrapMode="word">{`! ${tr("такой папки нет", "no such folder")}: ${confirmCreate}`}</text>
-              <text fg={theme.muted}>{tr("enter — создать · esc — отмена", "enter — create · esc — cancel")}</text>
+              <text selectable={false} fg={theme.warn} wrapMode="word">{`! ${tr("такой папки нет", "no such folder")}: ${confirmCreate}`}</text>
+              <text selectable={false} fg={theme.muted}>{tr("enter — создать · esc — отмена", "enter — create · esc — cancel")}</text>
             </box>
           ) : null}
           <ErrorLine text={error} />
@@ -293,7 +293,7 @@ export function SettingsScreen(props: ScreenProps) {
       {/* The description of the selected row sits at the bottom of the window. */}
       <box flexGrow={1} />
       {current ? (
-        <text fg={theme.faint} wrapMode="word" flexShrink={0}>
+        <text selectable={false} fg={theme.faint} wrapMode="word" flexShrink={0}>
           {help(current)}
         </text>
       ) : null}

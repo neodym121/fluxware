@@ -36,7 +36,7 @@ export function AboutScreen(props: ScreenProps) {
 
   return (
     <box flexDirection="column" flexGrow={1} focusable focused={props.focused}>
-      <text fg={theme.text} wrapMode="word">
+      <text selectable={false} fg={theme.text} wrapMode="word">
         <b fg={theme.accent}>Fluxware</b>
         {tr(
           " — бесплатный универсальный загрузчик медиа с открытым исходным кодом. Качает видео и аудио почти из любой точки интернета: YouTube, SoundCloud, X, TikTok и ещё сотни сайтов, которые понимает yt-dlp.",
@@ -60,12 +60,12 @@ export function AboutScreen(props: ScreenProps) {
         <Field label={tr("интерфейс", "interface")} width={14}>{`OpenTUI ${pkg.devDependencies["@opentui/core"]} · Bun ${Bun.version}`}</Field>
       </box>
       {tools && !tools.ytdlp ? (
-        <text fg={theme.muted} wrapMode="word" marginTop={1}>
+        <text selectable={false} fg={theme.muted} wrapMode="word" marginTop={1}>
           {tr("без yt-dlp загрузки не работают. установка: ", "downloads do not work without yt-dlp. install: ") + ytdlpInstallHint()}
         </text>
       ) : null}
       {tools && !tools.ffmpeg ? (
-        <text fg={theme.muted} wrapMode="word" marginTop={1}>
+        <text selectable={false} fg={theme.muted} wrapMode="word" marginTop={1}>
           {tr(
             "без ffmpeg не работают склейка дорожек, извлечение звука и обложки. установка: ",
             "merging tracks, audio extraction and covers do not work without ffmpeg. install: ",
@@ -73,7 +73,7 @@ export function AboutScreen(props: ScreenProps) {
         </text>
       ) : null}
       {tools && tools.jsRuntimes.length === 0 ? (
-        <text fg={theme.muted} wrapMode="word" marginTop={1}>
+        <text selectable={false} fg={theme.muted} wrapMode="word" marginTop={1}>
           {tr(
             "без deno или node YouTube иногда отдаёт только 360p: yt-dlp решает ими его JS-задачки.",
             "without deno or node YouTube sometimes serves only 360p: yt-dlp uses them to solve its JavaScript challenges.",

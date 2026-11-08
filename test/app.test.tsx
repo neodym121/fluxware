@@ -179,6 +179,31 @@ describe("App", () => {
     const done = await waitForText("✓ готово")
     if (process.env.SHOW_FRAMES) console.log(done)
     expect(done).toContain("Тестовое видео")
+    // The finished card says "done" only: the file name repeats the title above it.
+    const doneLine = done.split("\n").find((line) => line.includes("✓ готово"))
+    expect(doneLine).toBeDefined()
+    expect(doneLine).not.toContain(".mp4")
+  })
+
+  test("download: a click or a drag on a label starts no text selection", async () => {
+    await mount()
+    await press((s) => s.mockInput.typeText("https://youtu.be/ok"))
+    await press((s) => s.mockInput.pressEnter())
+    const frame = await waitForText("Тестовое видео")
+    const lines = frame.split("\n")
+    const row = lines.findIndex((line) => line.includes("Тестовое видео"))
+    expect(row).toBeGreaterThan(0)
+    await press(async (s) => {
+      await s.mockMouse.click(12, row)
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
+    expect(setup!.renderer.hasSelection).toBe(false)
+    await press((s) => s.mockMouse.pressDown(4, row))
+    expect(setup!.renderer.hasSelection).toBe(false)
+    await press((s) => s.mockMouse.moveTo(40, row))
+    expect(setup!.renderer.hasSelection).toBe(false)
+    await press((s) => s.mockMouse.release(40, row))
+    expect(setup!.renderer.hasSelection).toBe(false)
   })
 
   test("download: the copied link waits in the field, enter puts it in, enter again confirms", async () => {

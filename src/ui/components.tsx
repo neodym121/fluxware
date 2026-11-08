@@ -2,7 +2,6 @@ import type { BoxRenderable, InputRenderable } from "@opentui/core"
 import { useBindings } from "@opentui/keymap/react"
 import { useRenderer } from "@opentui/react"
 import { useEffect, useRef, type ReactNode } from "react"
-import { basename } from "node:path"
 import { formatDuration, formatSpeed, truncate } from "../core/format"
 import { count, getLanguage, tr } from "../core/i18n"
 import { hideSchemes, shortUrl } from "../core/urls"
@@ -14,10 +13,10 @@ import { theme } from "./theme"
 export function Field(props: { label: string; width?: number; children?: ReactNode; color?: string }) {
   return (
     <box flexDirection="row" height={1}>
-      <text fg={theme.faint} width={props.width ?? 10} flexShrink={0}>
+      <text selectable={false} fg={theme.faint} width={props.width ?? 10} flexShrink={0}>
         {props.label}
       </text>
-      <text fg={props.color ?? theme.text} wrapMode="none" flexShrink={1}>
+      <text selectable={false} fg={props.color ?? theme.text} wrapMode="none" flexShrink={1}>
         {props.children}
       </text>
     </box>
@@ -131,19 +130,19 @@ export function Menu(props: MenuProps) {
               else latest.current.onIndexChange(i)
             }}
           >
-            <text fg={active ? theme.accent : selected ? theme.muted : theme.selection} width={2} flexShrink={0}>
+            <text selectable={false} fg={active ? theme.accent : selected ? theme.muted : theme.selection} width={2} flexShrink={0}>
               {selected ? "▌" : " "}
             </text>
-            <text fg={fg} width={labelWidth} flexShrink={0} wrapMode="none">
+            <text selectable={false} fg={fg} width={labelWidth} flexShrink={0} wrapMode="none">
               {active ? <b>{item.label}</b> : item.label}
             </text>
             {item.value !== undefined ? (
-              <text fg={item.disabled ? theme.faint : selected ? theme.accent : theme.muted} wrapMode="none" flexShrink={1}>
+              <text selectable={false} fg={item.disabled ? theme.faint : selected ? theme.accent : theme.muted} wrapMode="none" flexShrink={1}>
                 {item.value}
               </text>
             ) : null}
             {item.hint && active ? (
-              <text fg={theme.faint} wrapMode="none" flexShrink={0}>
+              <text selectable={false} fg={theme.faint} wrapMode="none" flexShrink={0}>
                 {"  " + item.hint}
               </text>
             ) : null}
@@ -182,7 +181,7 @@ export function PromptInput(props: {
   const focusedFill = props.bare ? "transparent" : theme.fieldFocused
   return (
     <box flexDirection="row" height={1} backgroundColor={props.focused ? focusedFill : fill} onMouseDown={props.onMouseDown}>
-      <text fg={props.focused ? theme.accent : theme.faint} width={2} flexShrink={0}>
+      <text selectable={false} fg={props.focused ? theme.accent : theme.faint} width={2} flexShrink={0}>
         {"›"}
       </text>
       <input
@@ -212,14 +211,14 @@ const EIGHTHS = ["", "▏", "▎", "▍", "▌", "▋", "▊", "▉"]
 export function ProgressBar(props: { value: number | null; width: number; dim?: boolean }) {
   const width = Math.max(1, props.width)
   if (props.value == null) {
-    return <text fg={theme.track}>{"─".repeat(width)}</text>
+    return <text selectable={false} fg={theme.track}>{"─".repeat(width)}</text>
   }
   const exact = Math.min(1, Math.max(0, props.value)) * width
   const full = Math.floor(exact)
   const part = EIGHTHS[Math.floor((exact - full) * 8)] ?? ""
   const rest = Math.max(0, width - full - (part ? 1 : 0))
   return (
-    <text>
+    <text selectable={false}>
       <span fg={props.dim ? theme.muted : theme.accent} bg={theme.track}>
         {"█".repeat(full) + part}
       </span>
@@ -233,7 +232,7 @@ export function ProgressBar(props: { value: number | null; width: number; dim?: 
 export function Spinner(props: { text: string }) {
   const frame = useSpinner(true)
   return (
-    <text>
+    <text selectable={false}>
       <span fg={theme.accent}>{frame}</span>
       <span fg={theme.muted}>{" " + props.text}</span>
     </text>
@@ -285,26 +284,25 @@ export function JobProgress(props: { job: Job; width: number; left?: ReactNode }
   const { job } = props
   if (job.status === "failed") {
     return (
-      <text fg={theme.error} wrapMode="word">
+      <text selectable={false} fg={theme.error} wrapMode="word">
         {"✗ " + hideSchemes(job.error ?? tr("ошибка", "error"))}
       </text>
     )
   }
-  if (job.status === "canceled") return <text fg={theme.muted}>{"– " + tr("отменено", "canceled")}</text>
+  if (job.status === "canceled") return <text selectable={false} fg={theme.muted}>{"– " + tr("отменено", "canceled")}</text>
   if (job.status === "done") {
-    const file = job.files.at(-1)
     return (
       <box flexDirection="column" flexShrink={0}>
-        <text wrapMode="none">
+        <text selectable={false} wrapMode="none">
           <span fg={theme.accent}>{"✓ " + tr("готово", "done")}</span>
-          <span fg={theme.muted}>
-            {job.files.length > 1
-              ? ` · ${job.files.length} ${count(job.files.length, ["файл", "файла", "файлов"], ["file", "files"])}`
-              : file ? ` · ${truncate(basename(file), props.width - 10)}` : ""}
-          </span>
+          {job.files.length > 1 ? (
+            <span fg={theme.muted}>
+              {` · ${job.files.length} ${count(job.files.length, ["файл", "файла", "файлов"], ["file", "files"])}`}
+            </span>
+          ) : null}
         </text>
         {job.warnings.map((w, i) => (
-          <text key={i} fg={i === 0 ? theme.warn : theme.faint} wrapMode="word">
+          <text selectable={false} key={i} fg={i === 0 ? theme.warn : theme.faint} wrapMode="word">
             {(i === 0 ? "! " : "  ") + w}
           </text>
         ))}
@@ -319,7 +317,7 @@ export function JobProgress(props: { job: Job; width: number; left?: ReactNode }
         <box flexGrow={1} alignItems="flex-start">
           {props.left}
         </box>
-        <text fg={statusColor(job)} wrapMode="none" flexShrink={0}>
+        <text selectable={false} fg={statusColor(job)} wrapMode="none" flexShrink={0}>
           {jobStatusText(job)}
         </text>
       </box>
@@ -339,7 +337,7 @@ export function JobRow(props: { job: Job; width: number; selected?: boolean; sta
   const statusWidth = props.stacked ? props.width : Math.min(Math.max(12, Math.floor(props.width * 0.45)), job.status === "failed" ? 60 : 34)
   const barWidth = running && props.width >= 70 ? (props.stacked ? 24 : 12) : 0
   const title = (
-    <text wrapMode="none" flexGrow={1} flexShrink={1}>
+    <text selectable={false} wrapMode="none" flexGrow={1} flexShrink={1}>
       <span fg={theme.faint}>{`[${t.platform}] `}</span>
       <span fg={props.selected || running ? theme.accent : theme.text}>{t.title}</span>
       {t.author ? <span fg={theme.muted}>{` — ${t.author}`}</span> : null}
@@ -351,7 +349,7 @@ export function JobRow(props: { job: Job; width: number; selected?: boolean; sta
     </box>
   ) : null
   const statusText = (
-    <text fg={statusColor(job)} wrapMode="none" flexShrink={0}>
+    <text selectable={false} fg={statusColor(job)} wrapMode="none" flexShrink={0}>
       {(props.stacked ? "" : "  ") + truncate(status, statusWidth)}
     </text>
   )
@@ -408,7 +406,7 @@ export function Button(props: {
   const label = props.primary && props.focused ? `› ${props.label} ‹` : ` ${props.label} `
   return (
     <box height={1} flexShrink={0} backgroundColor={bg} onMouseDown={() => !props.disabled && props.onPress?.()}>
-      <text fg={fg} wrapMode="none">
+      <text selectable={false} fg={fg} wrapMode="none">
         {props.focused || props.primary ? <b>{label}</b> : label}
       </text>
     </box>

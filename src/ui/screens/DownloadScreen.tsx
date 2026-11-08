@@ -72,23 +72,23 @@ function InfoCard(props: { info: MediaInfo; showThumb: boolean; onThumbError: ()
         />
       ) : null}
       <box flexDirection="column" flexGrow={1} paddingLeft={props.showThumb ? 2 : 0}>
-        <text fg={theme.accent} wrapMode="word">
+        <text selectable={false} fg={theme.accent} wrapMode="word">
           <b>{info.title}</b>
         </text>
-        <text fg={theme.muted} wrapMode="none">
+        <text selectable={false} fg={theme.muted} wrapMode="none">
           {meta.join(" · ")}
         </text>
         {info.fallbackOnly ? (
           <box flexDirection="column" flexShrink={0}>
-            <text fg={theme.warn} wrapMode="word">
+            <text selectable={false} fg={theme.warn} wrapMode="word">
               {tr("! YouTube отдал только запасной формат: нормальных качеств сейчас нет", "! YouTube returned only a fallback format: no regular qualities right now")}
             </text>
             {info.warnings.map((w) => (
-              <text key={w} fg={theme.faint} wrapMode="word">
+              <text selectable={false} key={w} fg={theme.faint} wrapMode="word">
                 {"  yt-dlp: " + hideSchemes(w)}
               </text>
             ))}
-            <text fg={theme.faint}>{"  " + tr("обычно это временно: попробуй позже или обнови yt-dlp", "this is usually temporary: try later or update yt-dlp")}</text>
+            <text selectable={false} fg={theme.faint}>{"  " + tr("обычно это временно: попробуй позже или обнови yt-dlp", "this is usually temporary: try later or update yt-dlp")}</text>
           </box>
         ) : null}
         <box marginTop={1} flexShrink={0} flexDirection="column">
@@ -314,11 +314,11 @@ export function DownloadScreen(props: ScreenProps) {
     status = (
       <box flexDirection="column" alignItems="center" flexShrink={0}>
         <Spinner text={tr("получаю информацию…", "fetching information…")} />
-        <text fg={theme.faint}>{tr("esc — отмена", "esc — cancel")}</text>
+        <text selectable={false} fg={theme.faint}>{tr("esc — отмена", "esc — cancel")}</text>
       </box>
     )
   else if (stage.kind === "error") status = <ErrorLine text={stage.message} />
-  else if (stage.kind === "idle" && !clip) status = <text fg={theme.faint} wrapMode="none">{platforms()}</text>
+  else if (stage.kind === "idle" && !clip) status = <text selectable={false} fg={theme.faint} wrapMode="none">{platforms()}</text>
 
   const menu = hasMenu ? (
     <Menu
@@ -422,10 +422,10 @@ export function DownloadScreen(props: ScreenProps) {
         <box width={boxWidth} marginTop={1} flexShrink={0} flexDirection="column">
           {stage.kind === "many" ? (
             <>
-              <text fg={theme.accent}>
+              <text selectable={false} fg={theme.accent}>
                 <b>{`${tr("ссылок", "links")}: ${stage.urls.length}`}</b>
               </text>
-              <text fg={theme.faint} wrapMode="none">
+              <text selectable={false} fg={theme.faint} wrapMode="none">
                 {stage.urls.slice(0, 3).map((u) => shortUrl(u, 26)).join(" · ") + (stage.urls.length > 3 ? " · …" : "")}
               </text>
               <box marginTop={1} flexShrink={0}>

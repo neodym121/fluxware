@@ -187,7 +187,7 @@ export function BatchScreen(props: ScreenProps) {
 
   return (
     <box ref={rootRef} flexDirection="column" flexGrow={1}>
-      <text fg={theme.muted} flexShrink={0}>
+      <text selectable={false} fg={theme.muted} flexShrink={0}>
         {tr("ссылки: вставь любой текст, ссылки найдутся сами", "links: paste any text, the links are found automatically")}
       </text>
       <box
@@ -211,7 +211,7 @@ export function BatchScreen(props: ScreenProps) {
           onContentChange={onTextChange}
         />
       </box>
-      <text fg={theme.faint} flexShrink={0}>
+      <text selectable={false} fg={theme.faint} flexShrink={0}>
         {tr("найдено ссылок", "links found")}: <span fg={urls.length ? theme.accent : theme.faint}>{String(urls.length)}</span>
         {tr("  ·  tab — к кнопкам · ctrl+s — начать", "  ·  tab — to buttons · ctrl+s — start")}
       </text>
@@ -229,7 +229,7 @@ export function BatchScreen(props: ScreenProps) {
       </box>
       {fileOpen ? (
         <box flexDirection="column" marginTop={1} flexShrink={0}>
-          <text fg={theme.muted}>{tr("путь до файла со ссылками (можно перетащить файл в окно)", "path to a file with links (you can drag the file into the window)")}</text>
+          <text selectable={false} fg={theme.muted}>{tr("путь до файла со ссылками (можно перетащить файл в окно)", "path to a file with links (you can drag the file into the window)")}</text>
           <PromptInput
             value={filePath}
             onInput={setFilePath}
@@ -255,7 +255,7 @@ export function BatchScreen(props: ScreenProps) {
       {runJobs.length ? (
         <box flexDirection="column" marginTop={1} flexGrow={1}>
           <box flexDirection="row" height={1} flexShrink={0}>
-            <text wrapMode="none" flexShrink={0}>
+            <text selectable={false} wrapMode="none" flexShrink={0}>
               <span fg={theme.text}>{`${tr("пакет: готово", "batch: done")} ${done} ${tr("из", "of")} ${runJobs.length}`}</span>
               {failed ? <span fg={theme.error}>{` · ${tr("ошибок", "errors")} ${failed}`}</span> : null}
               <span fg={theme.faint}>{finished === runJobs.length ? tr(" · всё", " · all done") : ""}</span>

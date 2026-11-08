@@ -77,7 +77,7 @@ function KeyHints() {
     groups.set(desc, list)
   }
   return (
-    <text wrapMode="none" flexGrow={1} flexShrink={1}>
+    <text selectable={false} wrapMode="none" flexGrow={1} flexShrink={1}>
       {[...groups.entries()].map(([desc, labels], i) => (
         <span key={desc}>
           <span fg={theme.text}>{(i ? "   " : "") + labels.join("/")}</span>
@@ -96,7 +96,7 @@ function QueueStatus() {
   if (s.running === 0 && s.queued === 0) {
     if (s.done === 0 && s.failed === 0) return null
     return (
-      <text fg={theme.faint} wrapMode="none" flexShrink={0}>
+      <text selectable={false} fg={theme.faint} wrapMode="none" flexShrink={0}>
         {`${tr("готово", "done")} ${s.done}`}
         {s.failed ? <span fg={theme.error}>{` · ${tr("ошибок", "errors")} ${s.failed}`}</span> : null}
       </text>
@@ -105,7 +105,7 @@ function QueueStatus() {
   const pct = s.overall != null ? ` · ${Math.floor(s.overall * 100)}%` : ""
   const speed = s.speed ? ` · ${formatSpeed(s.speed)}` : ""
   return (
-    <text wrapMode="none" flexShrink={0}>
+    <text selectable={false} wrapMode="none" flexShrink={0}>
       <span fg={theme.accent}>{frame + " "}</span>
       <span fg={theme.text}>{`${s.running} ${count(s.running, ["загрузка", "загрузки", "загрузок"], ["download", "downloads"])}`}</span>
       <span fg={theme.muted}>{(s.queued ? ` · ${tr("ждут", "waiting")} ${s.queued}` : "") + speed + pct}</span>
@@ -117,7 +117,7 @@ function ToastLine(props: { toast: Toast; width: number }) {
   const color = { ok: theme.accent, info: theme.text, warn: theme.warn, error: theme.error }[props.toast.kind]
   const glyph = { ok: "✓", info: "·", warn: "!", error: "✗" }[props.toast.kind]
   return (
-    <text fg={color} wrapMode="none" flexShrink={0}>
+    <text selectable={false} fg={color} wrapMode="none" flexShrink={0}>
       {truncate(`${glyph} ${props.toast.text}`, props.width)}
     </text>
   )
@@ -156,10 +156,10 @@ function BottomBar(props: { compact: boolean; toast: Toast | null; width: number
       <ascii-font text="FLUXWARE" font="tiny" color={theme.accent} selectable={false} flexShrink={0} />
       <box flexGrow={1} flexDirection="column" paddingLeft={2}>
         <box height={1} flexDirection="row">
-          <text fg={theme.muted} wrapMode="none" flexGrow={1}>
+          <text selectable={false} fg={theme.muted} wrapMode="none" flexGrow={1}>
             universal media downloader
           </text>
-          <text wrapMode="none" flexShrink={0}>
+          <text selectable={false} wrapMode="none" flexShrink={0}>
             <ToolVersions />
           </text>
         </box>
@@ -205,11 +205,11 @@ function Notice(props: { title: string; lines: string[]; onClose: () => void; wi
       flexDirection="column"
     >
       {props.lines.map((line, i) => (
-        <text key={i} fg={i === 0 ? theme.text : theme.muted} wrapMode="word">
+        <text selectable={false} key={i} fg={i === 0 ? theme.text : theme.muted} wrapMode="word">
           {line}
         </text>
       ))}
-      <text fg={theme.faint} marginTop={1}>
+      <text selectable={false} fg={theme.faint} marginTop={1}>
         {tr("enter — понятно", "enter — got it")}
       </text>
     </box>
@@ -252,7 +252,7 @@ function TabBar(props: { section: SectionId; focused: boolean; onPick: (id: Sect
             backgroundColor={bg}
             onMouseDown={() => props.onPick(id)}
           >
-            <text fg={fg} wrapMode="none">
+            <text selectable={false} fg={fg} wrapMode="none">
               {selected ? <b>{label + badge}</b> : label + badge}
             </text>
           </box>

@@ -34,7 +34,7 @@ export function useFocusEntry(entry: FocusEntry, onEnter: (edge: FocusEntry["edg
 export function ErrorLine(props: { text: string | null }) {
   if (!props.text) return null
   return (
-    <text fg={theme.error} wrapMode="word">
+    <text selectable={false} fg={theme.error} wrapMode="word">
       {"✗ " + props.text}
     </text>
   )

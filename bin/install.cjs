@@ -11,18 +11,18 @@ function fail(message) {
   process.exit(1)
 }
 
-function download(url, dest, redirectsLeft) {
+function downloadOnce(url, dest, redirectsLeft, onDone) {
   https
-    .get(url, (res) => {
+    .get(url, { timeout: 60000 }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400) {
         const location = res.headers.location
         res.resume()
-        if (!location || redirectsLeft <= 0) return fail("слишком много редиректов при скачивании")
-        return download(location, dest, redirectsLeft - 1)
+        if (!location || redirectsLeft <= 0) return onDone(new Error("слишком много редиректов"))
+        return downloadOnce(location, dest, redirectsLeft - 1, onDone)
       }
       if (res.statusCode !== 200) {
         res.resume()
-        return fail(`не удалось скачать бинарник (HTTP ${res.statusCode})`)
+        return onDone(new Error(`HTTP ${res.statusCode}`))
       }
       const tmp = dest + ".tmp"
       const out = fs.createWriteStream(tmp)
@@ -30,10 +30,29 @@ function download(url, dest, redirectsLeft) {
       out.on("finish", () => out.close(() => fs.renameSync(tmp, dest)))
       out.on("error", () => {
         fs.rmSync(tmp, { force: true })
-        fail("ошибка записи файла")
+        onDone(new Error("ошибка записи файла"))
       })
     })
-    .on("error", (err) => fail(`ошибка скачивания: ${err.message}`))
+    .on("timeout", function () {
+      this.destroy(new Error("таймаут соединения"))
+    })
+    .on("error", (err) => onDone(err))
+}
+
+function download(url, dest, attempt) {
+  downloadOnce(url, dest, 5, (err) => {
+    if (!err) return
+    if (attempt < 5) {
+      const delay = 3000 * attempt
+      console.log(`fluxware: попытка ${attempt + 1}/5 через ${delay / 1000} с (${err.message})`)
+      return setTimeout(() => download(url, dest, attempt + 1), delay)
+    }
+    fail(
+      `не удалось скачать бинарник: ${err.message}\n` +
+        `Скачайте вручную: ${url}\n` +
+        `и положите файл как: ${dest}`
+    )
+  })
 }
 
 function main() {
@@ -48,7 +67,7 @@ function main() {
   if (fs.existsSync(dest)) process.exit(0)
   const url = `https://github.com/${REPO}/releases/download/v${version}/fx-win-x64.exe`
   console.log(`fluxware: скачивание бинарника v${version}...`)
-  download(url, dest, 5)
+  download(url, dest, 1)
 }
 
 main()

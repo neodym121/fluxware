@@ -30,7 +30,15 @@ You need [Node.js](https://nodejs.org) — npm comes with it.
 npm install -g fluxware
 ```
 
-Then open a terminal and run `fx`. The app downloads itself during installation. Windows x64 and Linux x64 are supported; on macOS you can [run from source](#run-from-source) instead.
+On Linux a system-wide Node needs `sudo` for this, exactly like any other global package: `sudo npm install -g fluxware`. If you would rather not use `sudo`, point npm at a folder of your own first with `npm config set prefix ~/.local`.
+
+Then open a terminal and run `fx`. Windows x64 and Linux x64 are supported; on macOS you can [run from source](#run-from-source) instead.
+
+The binary travels inside the package, so there is nothing to download after the install and no extra flags are needed, even where npm 12 and newer block install scripts. If `fx` ever complains that the binary is missing, put it back in place yourself:
+
+```bash
+node "$(npm root -g)/fluxware/bin/install.cjs"
+```
 
 You also need the tools below. The interface language follows your system and can be switched in the settings.
 

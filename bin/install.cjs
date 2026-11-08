@@ -1,31 +1,17 @@
 // Provides the prebuilt fluxware binary: prefers the platform-specific
 // fluxware-bin-* npm package, falls back to downloading from GitHub Releases.
+// fx.cjs also reads the package directly, so this script only matters for
+// installers that still run lifecycle scripts.
 const fs = require("fs")
 const path = require("path")
 const https = require("https")
+const { target, localBinary, packageBinary } = require("./bin-path.cjs")
 
 const REPO = "neodym121/fluxware"
-
-const TARGETS = {
-  "win32-x64": { pkg: "fluxware-bin-win-x64", file: "fx-win-x64.exe" },
-  "linux-x64": { pkg: "fluxware-bin-linux-x64", file: "fx-linux-x64" },
-}
 
 function fail(message) {
   console.error(`fluxware: ${message}`)
   process.exit(1)
-}
-
-function copyLocalBinary(target, dest) {
-  try {
-    const manifest = require.resolve(`${target.pkg}/package.json`)
-    const candidate = path.join(path.dirname(manifest), target.file)
-    if (!fs.existsSync(candidate)) return false
-    fs.copyFileSync(candidate, dest)
-    return true
-  } catch {
-    return false
-  }
 }
 
 function downloadOnce(url, dest, redirectsLeft, onDone) {
@@ -73,23 +59,25 @@ function download(url, dest, attempt) {
 }
 
 function main() {
-  const target = TARGETS[`${process.platform}-${process.arch}`]
-  if (!target) {
+  const found = process.arch === "x64" ? target(process.platform) : null
+  if (!found) {
     console.error("fluxware: сборки пока есть только для win32-x64 и linux-x64. Прочие платформы: см. README.")
     process.exit(0)
   }
   // Development checkout: binary comes from `bun run build`, nothing to download.
   if (fs.existsSync(path.join(__dirname, "..", "src", "index.tsx"))) process.exit(0)
-  const { version } = require("../package.json")
-  const dest = path.join(__dirname, target.file)
+  const dest = localBinary(process.platform, __dirname)
   if (fs.existsSync(dest)) process.exit(0)
-  console.log(`fluxware: установка бинарника v${version}...`)
-  if (copyLocalBinary(target, dest)) {
+  const fromPackage = packageBinary(process.platform)
+  if (fromPackage) {
+    fs.copyFileSync(fromPackage, dest)
     fs.chmodSync(dest, 0o755)
     process.exit(0)
   }
+  const { version } = require("../package.json")
+  console.log(`fluxware: установка бинарника v${version}...`)
   console.log("fluxware: бинарник не найден в npm, скачивание с GitHub...")
-  const url = `https://github.com/${REPO}/releases/download/v${version}/${target.file}`
+  const url = `https://github.com/${REPO}/releases/download/v${version}/${found.file}`
   download(url, dest, 1)
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "fluxware-bin-win-x64",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Prebuilt Windows x64 binary for fluxware (fx-win-x64.exe)",
   "license": "MIT",
   "os": [

@@ -128,8 +128,6 @@ export function revealInFileManager(target: { dir: string; file?: string | null 
       // quoting would wrap the whole argument, so the line is passed verbatim.
       const arg = target.file ? `/select,"${target.file}"` : `"${target.dir}"`
       spawn("explorer.exe", [arg], { ...detached, windowsVerbatimArguments: true }).unref()
-    } else if (process.platform === "darwin") {
-      spawn("open", target.file ? ["-R", target.file] : [target.dir], detached).unref()
     } else {
       spawn("xdg-open", [target.dir], detached).unref()
     }

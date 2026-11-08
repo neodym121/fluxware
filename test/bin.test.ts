@@ -75,9 +75,9 @@ test("returns null when no binary is installed", () => {
 
 test("reports no target for unsupported platforms", () => {
   const { appBin, binPath } = globalInstall({ pkg: true })
-  expect(binPath.target("darwin")).toBeNull()
-  expect(binPath.localBinary("darwin", appBin)).toBeNull()
-  expect(binPath.resolveBinary("darwin", appBin)).toBeNull()
+  expect(binPath.target("freebsd")).toBeNull()
+  expect(binPath.localBinary("freebsd", appBin)).toBeNull()
+  expect(binPath.resolveBinary("freebsd", appBin)).toBeNull()
 })
 
 test("uses the Windows file and package names on win32", () => {

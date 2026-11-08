@@ -9,7 +9,6 @@ import pkg from "../../../package.json"
 
 export function ffmpegInstallHint(platform = process.platform): string {
   if (platform === "win32") return `winget install ffmpeg   (${tr("или", "or")} choco install ffmpeg)`
-  if (platform === "darwin") return "brew install ffmpeg"
   return "sudo apt install ffmpeg · sudo dnf install ffmpeg · sudo pacman -S ffmpeg"
 }
 

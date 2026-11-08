@@ -8,7 +8,7 @@ This is a local CLI/TUI application, not a web application or server. It fetches
 
 The current implementation is TypeScript. The root `fluxware_new_.py` is the old Python version, is explicitly ignored by Git, and is not an entry point. The only current Python integration is runtime support for `python -m yt_dlp` and migration of the old version's settings.
 
-The application is developed and tested in Windows Terminal. It also contains explicit macOS and Linux paths for configuration, process management, and opening files.
+The application is developed and tested in Windows Terminal. It also contains explicit Linux paths for configuration, process management, and opening files.
 
 ## Technology and configuration
 
@@ -110,7 +110,6 @@ These modules contain application logic without React or OpenTUI rendering depen
 `configPath()` selects the configuration directory:
 
 - Windows: `%APPDATA%\fluxware` (with a per-user roaming-profile fallback).
-- macOS: `~/Library/Application Support/fluxware`.
 - Linux and other platforms: `$XDG_CONFIG_HOME/fluxware`, or `~/.config/fluxware` when that variable is unset.
 
 The directory contains:

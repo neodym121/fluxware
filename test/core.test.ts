@@ -416,9 +416,6 @@ describe("yt-dlp bootstrap", () => {
     expect(managedYtdlpPath({ LOCALAPPDATA: "C:\local" }, "win32", "C:\home")).toBe(local)
     expect(managedYtdlpPath({}, "linux", "/home/me")).toBe(join("/home/me", ".local", "share", "fluxware", "bin", "yt-dlp"))
     expect(managedYtdlpPath({ XDG_DATA_HOME: "/data" }, "linux", "/home/me")).toBe(join("/data", "fluxware", "bin", "yt-dlp"))
-    expect(managedYtdlpPath({}, "darwin", "/Users/me")).toBe(
-      join("/Users/me", "Library", "Application Support", "fluxware", "bin", "yt-dlp"),
-    )
   })
 
   test("picks the standalone build for the platform, the libc and the architecture", () => {
@@ -428,7 +425,6 @@ describe("yt-dlp bootstrap", () => {
     expect(ytdlpAssets("linux", "arm", false)).toEqual([])
     expect(ytdlpAssets("win32", "x64", false)).toEqual(["yt-dlp.exe"])
     expect(ytdlpAssets("win32", "ia32", false)).toEqual(["yt-dlp_x86.exe"])
-    expect(ytdlpAssets("darwin", "arm64", false)).toEqual(["yt-dlp_macos"])
     expect(ytdlpAssets("freebsd", "x64", false)).toEqual([])
   })
 

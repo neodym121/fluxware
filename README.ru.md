@@ -32,7 +32,7 @@ npm install -g fluxware
 
 В Linux для системного Node нужен `sudo`, как и для любого другого глобального пакета: `sudo npm install -g fluxware`. Если `sudo` не хочется, сначала переключи npm на свою папку: `npm config set prefix ~/.local`.
 
-После этого открой терминал и запусти `fx`. Поддерживаются Windows x64 и Linux x64; на macOS можно вместо этого [запустить из исходников](#запуск-из-исходников).
+После этого открой терминал и запусти `fx`. Поддерживаются Windows x64 и Linux x64.
 
 Бинарник лежит внутри пакета, поэтому после установки ничего не докачивается и никаких дополнительных ключей не нужно — даже там, где npm 12 и новее блокирует install-скрипты. Если `fx` когда-нибудь скажет, что бинарник не найден, положи его на место вручную:
 
@@ -47,7 +47,7 @@ node "$(npm root -g)/fluxware/bin/install.cjs"
 - [ffmpeg](https://ffmpeg.org): `winget install ffmpeg`, нужен для склейки видео и звука, извлечения аудио и обложек
 - [Deno](https://deno.com), желательно: им yt-dlp решает JavaScript-задачки YouTube (подойдёт и уже установленный Node.js), без них YouTube иногда отдаёт только 360p
 
-yt-dlp идёт в комплекте: ставить его никуда не надо, Python не нужен. fluxware ищет `yt-dlp` в `PATH`, затем Python-модуль `yt_dlp`, а если нет ничего — при первом запуске скачивает отдельную сборку yt-dlp (17 МБ на Windows, 41 МБ на Linux) и показывает прогресс в строке состояния. Сборка лежит в `%LOCALAPPDATA%\fluxware\bin` на Windows, `~/Library/Application Support/fluxware/bin` на macOS и `~/.local/share/fluxware/bin` на Linux, и дальше используется она.
+yt-dlp идёт в комплекте: ставить его никуда не надо, Python не нужен. fluxware ищет `yt-dlp` в `PATH`, затем Python-модуль `yt_dlp`, а если нет ничего — при первом запуске скачивает отдельную сборку yt-dlp (17 МБ на Windows, 41 МБ на Linux) и показывает прогресс в строке состояния. Сборка лежит в `%LOCALAPPDATA%\fluxware\bin` на Windows и `~/.local/share/fluxware/bin` на Linux, и дальше используется она.
 
 ## Запуск из исходников
 
@@ -72,12 +72,6 @@ bun start
 | `Ctrl+C` | Выход; если идут загрузки, нажать дважды |
 
 Нижняя строка всегда показывает клавиши, которые работают прямо сейчас. Мышь тоже работает.
-
-## Файлы
-
-Настройки, лог истории и небольшой файл состояния лежат в `%APPDATA%\fluxware` на Windows, в `~/Library/Application Support/fluxware` на macOS и в `~/.config/fluxware` на Linux. Настройки прежней Python-версии переносятся при первом запуске.
-
-Скачанный fluxware бинарник yt-dlp хранится отдельно: `%LOCALAPPDATA%\fluxware\bin`, `~/Library/Application Support/fluxware/bin` или `~/.local/share/fluxware/bin`. Удалите этот файл, чтобы fluxware скачал его заново.
 
 ## Лицензия
 

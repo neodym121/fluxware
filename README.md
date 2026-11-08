@@ -32,7 +32,7 @@ npm install -g fluxware
 
 On Linux a system-wide Node needs `sudo` for this, exactly like any other global package: `sudo npm install -g fluxware`. If you would rather not use `sudo`, point npm at a folder of your own first with `npm config set prefix ~/.local`.
 
-Then open a terminal and run `fx`. Windows x64 and Linux x64 are supported; on macOS you can [run from source](#run-from-source) instead.
+Then open a terminal and run `fx`. Windows x64 and Linux x64 are supported.
 
 The binary travels inside the package, so there is nothing to download after the install and no extra flags are needed, even where npm 12 and newer block install scripts. If `fx` ever complains that the binary is missing, put it back in place yourself:
 
@@ -47,7 +47,7 @@ You also need ffmpeg, see below. The interface language follows your system and 
 - [ffmpeg](https://ffmpeg.org): `winget install ffmpeg`, needed to merge video and audio, extract audio and embed covers
 - [Deno](https://deno.com), recommended: yt-dlp uses it (or the Node.js you already installed) to solve YouTube's JavaScript challenges, without which YouTube sometimes offers only 360p
 
-yt-dlp comes with fluxware: you do not install it anywhere and Python is not needed. fluxware looks for `yt-dlp` on `PATH`, then for the Python module `yt_dlp`, and otherwise downloads yt-dlp's own standalone build on the first launch (17 MB on Windows, 41 MB on Linux), showing the progress in the status line. The build lives in `%LOCALAPPDATA%\fluxware\bin` on Windows, `~/Library/Application Support/fluxware/bin` on macOS and `~/.local/share/fluxware/bin` on Linux, and is reused from then on.
+yt-dlp comes with fluxware: you do not install it anywhere and Python is not needed. fluxware looks for `yt-dlp` on `PATH`, then for the Python module `yt_dlp`, and otherwise downloads yt-dlp's own standalone build on the first launch (17 MB on Windows, 41 MB on Linux), showing the progress in the status line. The build lives in `%LOCALAPPDATA%\fluxware\bin` on Windows and `~/.local/share/fluxware/bin` on Linux, and is reused from then on.
 
 ## Run from source
 
@@ -72,12 +72,6 @@ bun start
 | `Ctrl+C` | Quit; while downloads run, press it twice |
 
 The bottom line always shows the keys that work right now. The mouse works too.
-
-## Files
-
-Settings, the history log and a small state file live in `%APPDATA%\fluxware` on Windows, `~/Library/Application Support/fluxware` on macOS and `~/.config/fluxware` on Linux. Settings of the earlier Python version are carried over on the first launch.
-
-The yt-dlp build fluxware downloaded for itself is kept apart: `%LOCALAPPDATA%\fluxware\bin`, `~/Library/Application Support/fluxware/bin` or `~/.local/share/fluxware/bin`. Delete that file to have it fetched again.
 
 ## License
 

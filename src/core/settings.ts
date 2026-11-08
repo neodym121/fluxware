@@ -43,7 +43,6 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
 
 export function configPath(env: NodeJS.ProcessEnv = process.env, platform = process.platform, home = homedir()): string {
   if (platform === "win32") return join(env.APPDATA || join(home, "AppData", "Roaming"), "fluxware", "config.json")
-  if (platform === "darwin") return join(home, "Library", "Application Support", "fluxware", "config.json")
   return join(env.XDG_CONFIG_HOME || join(home, ".config"), "fluxware", "config.json")
 }
 

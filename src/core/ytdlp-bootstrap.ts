@@ -9,7 +9,6 @@ const RELEASES = "https://github.com/yt-dlp/yt-dlp/releases/latest/download"
 /** Directory for files fluxware provides for itself, such as its own yt-dlp. */
 export function managedBinDir(env: NodeJS.ProcessEnv = process.env, platform = process.platform, home = homedir()): string {
   if (platform === "win32") return join(env.LOCALAPPDATA || join(home, "AppData", "Local"), "fluxware", "bin")
-  if (platform === "darwin") return join(home, "Library", "Application Support", "fluxware", "bin")
   return join(env.XDG_DATA_HOME || join(home, ".local", "share"), "fluxware", "bin")
 }
 
@@ -36,7 +35,6 @@ export function ytdlpAssets(
   musl = platform === "linux" && hasMuslLibc(),
 ): string[] {
   if (platform === "win32") return arch === "ia32" ? ["yt-dlp_x86.exe"] : ["yt-dlp.exe"]
-  if (platform === "darwin") return ["yt-dlp_macos"]
   if (platform !== "linux") return []
   if (arch === "arm64") return musl ? ["yt-dlp_musllinux_aarch64"] : ["yt-dlp_linux_aarch64", "yt-dlp_musllinux_aarch64"]
   if (arch === "ia32" || arch === "arm") return []
